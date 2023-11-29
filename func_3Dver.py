@@ -44,6 +44,8 @@ def load_dataset():
         x_train = []
         for i in range(spike_range):  # 100枚のスパイクデータ
             spike_data = []
+
+            # ---スパイクデータ読み込み---
             for j in range(spike_range_in):
                 filename_x = '\\img1_' + str(i) + '_' + str(j) + '.csv'
 
@@ -51,6 +53,7 @@ def load_dataset():
 
                 spike_data = spike_add(j, spike_temp, spike_data)
 
+            # ---スパイクデータのリサイズ, 120*120---
             half_size = int(spike_data.shape[0] / 2)
             spike_data = spike_data[(half_size - (int(resize / 2))):(half_size + (int(resize / 2))),
                          (half_size - (int(resize / 2))):(half_size + (int(resize / 2)))]
