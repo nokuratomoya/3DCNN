@@ -55,7 +55,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
     model = model_build(time_size, xy_size, filter_size, input_shape)
 
     # 打ち切り設定
-    early_stopping = EarlyStopping(monitor="loss", min_delta=0.000, patience=100)
+    early_stopping = EarlyStopping(monitor="MeanSquaredError", min_delta=0.000, patience=100)
 
     # history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
     history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1, callbacks=[early_stopping])

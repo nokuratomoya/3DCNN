@@ -57,7 +57,7 @@ def model_build(kernel_time, kernel_xy, filter_size, input_shape=(100, 30, 30, 1
         ]
     )
 
-    model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['MeanSquaredError'])
     # model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
     model.summary()
 

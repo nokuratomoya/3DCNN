@@ -21,7 +21,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 split_num = 4  # 分割サイズ　split_num*split_num分割される
 resize = 120  # resize * resize pixel
 # pixel = int(resize / split_num)
-pixel = 120
+pixel = 30
 # date = "20230125"
 date = get_now()
 train_data_date = "20230120"
@@ -31,7 +31,7 @@ spike_data_num = 100
 # 刺激画像が始まる位置(教師画像は+1)
 stim_head = 201
 # データ拡張数
-expansion_num = 1
+expansion_num = 100
 
 dirname_main = r'F:\train_data\20231129\stim400_cycle800ms'
 
@@ -62,12 +62,12 @@ def load_dataset():
 
     # ---訓練データ(x_train)拡張---
     start = time.time()
-    # x_trains_expansion_list, y_trains_expansion_list = data_expansion_main(x_trains_resize_list, y_trains_resize_list)
+    x_trains_expansion_list, y_trains_expansion_list = data_expansion_main(x_trains_resize_list, y_trains_resize_list)
     end = time.time()
     print("expansion_time:{}".format(end - start))
 
-    # return x_trains_expansion_list, y_trains_expansion_list, value_filename
-    return x_trains_resize_list, y_trains_resize_list, value_filename
+    return x_trains_expansion_list, y_trains_expansion_list, value_filename
+    # return x_trains_resize_list, y_trains_resize_list, value_filename
 
 
 def load_dataset_predict(filename):
