@@ -6,6 +6,7 @@ import pathlib
 import os
 import time
 import pickle
+from natsort import natsorted
 
 EPOCHS = 10000
 BATCH_SIZE = 16
@@ -55,7 +56,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
     model = model_build(time_size, xy_size, filter_size, input_shape)
 
     # 打ち切り設定
-    early_stopping = EarlyStopping(monitor="MeanSquaredError", min_delta=0.000, patience=100)
+    early_stopping = EarlyStopping(monitor="mean_squared_error", min_delta=0.000, patience=100)
 
     # history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
     history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1, callbacks=[early_stopping])
@@ -85,6 +86,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
     train_dir = r"F:\train_data\20231129\stim400_cycle800ms"
     all_filename = os.listdir(train_dir)
     used_filename = set(all_filename) ^ set(unused_filename)
+    used_filename = natsorted(used_filename)
     save_data_txt(used_filename, save_used_dir)
     save_data_csv(list(used_filename), result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
 
