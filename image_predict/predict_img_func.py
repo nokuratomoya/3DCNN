@@ -2,11 +2,11 @@
 # EPOCHSだけ自分で設定する必要あり
 
 from tensorflow.keras.models import load_model
-from func_3DCNN_predict import load_dataset_predict, split_num, img_show, pre_concatenate, pre_npy_save
+from func_3DCNN_predict import load_dataset_predict, img_show, pre_concatenate, pre_npy_save
 import numpy as np
 import os
 import pickle
-from global_value import BATCH_SIZE, dataset_num, model_date
+from global_value import BATCH_SIZE, dataset_num, model_date, pixel_size, split_num
 from natsort import natsorted
 
 
@@ -19,8 +19,14 @@ def predict_calc_save(pre_file, t_v, result_dirpath, EPOCHS, model):
 
     x_pre = model.predict(x_pre)
     x_pre *= 255.0
-    x_pre = x_pre.reshape(split_num * split_num, 30, 30)
-    x_pre_total = pre_concatenate(x_pre)
+    x_pre = x_pre.reshape(split_num * split_num, pixel_size, pixel_size)
+    if split_num == 1:
+        x_pre = x_pre.reshape(pixel_size, pixel_size)
+        x_pre_total = x_pre
+    else:
+        x_pre_total = pre_concatenate(x_pre)
+    # print(x_pre_total.shape)
+    # x_pre_total = pre_concatenate(x_pre)
     # y_pre_total = pre_concatenate(y_pre)
 
     # pre_dirpath = date + r'\predict\\' + t_v + '_predict\\'  # k_20, train

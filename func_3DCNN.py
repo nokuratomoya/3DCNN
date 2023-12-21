@@ -18,10 +18,10 @@ from global_value import get_now
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-split_num = 4  # 分割サイズ　split_num*split_num分割される
+split_num = 1  # 分割サイズ　split_num*split_num分割される concatenateするときに使う
 resize = 120  # resize * resize pixel
 # pixel = int(resize / split_num)
-pixel = 30
+pixel = 120
 # date = "20230125"
 date = get_now()
 train_data_date = "20230120"
@@ -31,7 +31,12 @@ spike_data_num = 100
 # 刺激画像が始まる位置(教師画像は+1)
 stim_head = 201
 # データ拡張数
-expansion_num = 100
+expansion_num = 1
+
+# 三次元出力用
+output_3D = True
+skip_data_num = 23
+dataset_num_3D = int((800 - spike_data_num) / skip_data_num)
 
 dirname_main = r'F:\train_data\20231129\stim400_cycle800ms'
 
@@ -45,8 +50,12 @@ def load_dataset():
 
     # ---訓練データ(x_train)読み込み---
     start = time.time()
-    # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
-    x_trains, y_trains = load_data(train_filename)
+
+    if output_3D:
+        x_trains, y_trains = load_data_3D(train_filename)
+    else:
+        # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
+        x_trains, y_trains = load_data(train_filename)
     end = time.time()
     print("load_data_time:{}".format(end - start))
     # print(f"x_trains:{len(x_trains)}*{len(x_trains[0])}*{len(x_trains[0][0])}*{len(x_trains[0][0][0])}")
@@ -54,52 +63,31 @@ def load_dataset():
 
     # ---訓練データ(x_train)リサイズ---
     start = time.time()
-    # x_trains_resize: [train_data_num*spike_data_num, 120, 120], y_trains_resize: [train_data_num, 120, 120]
+    # x_trains_resize: [train_data_num, spike_data_num, 120, 120], y_trains_resize: [train_data_num, 120, 120]
     x_trains_resize_list = x_trains_resize(x_trains)
     y_trains_resize_list = y_trains_resize(y_trains)
     end = time.time()
     print("resize_time:{}".format(end - start))
 
-    # ---訓練データ(x_train)拡張---
-    start = time.time()
-    x_trains_expansion_list, y_trains_expansion_list = data_expansion_main(x_trains_resize_list, y_trains_resize_list)
-    end = time.time()
-    print("expansion_time:{}".format(end - start))
+    if expansion_num != 1:
+        # ---訓練データ(x_train)拡張---
+        start = time.time()
+        x_trains_expansion_list, y_trains_expansion_list = data_expansion_main(x_trains_resize_list,
+                                                                               y_trains_resize_list)
+        end = time.time()
+        print("expansion_time:{}".format(end - start))
+        return x_trains_expansion_list, y_trains_expansion_list, value_filename
 
-    return x_trains_expansion_list, y_trains_expansion_list, value_filename
-    # return x_trains_resize_list, y_trains_resize_list, value_filename
+    # if output_3D:
+    #     # ---訓練データ(x_train)3D化---
+    #     start = time.time()
+    #     x_trains_3D_list, y_trains_3D_list = data_3D_main(x_trains_resize_list, y_trains_resize_list)
+    #     end = time.time()
+    #     print("3D_time:{}".format(end - start))
+    #     return x_trains_3D_list, y_trains_3D_list, value_filename
 
-
-def load_dataset_predict(filename):
-    # train_filename = natsorted(train_filename)
-    # value_filename = natsorted(value_filename)
-    # print(train_filename)
-    # print(value_filename)
-
-    # ---訓練データ(x_train)読み込み---
-    start = time.time()
-    # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
-    x_trains, y_trains = load_data(filename)
-    end = time.time()
-    # print("load_data_time:{}".format(end - start))
-    # print(f"x_trains:{len(x_trains)}*{len(x_trains[0])}*{len(x_trains[0][0])}*{len(x_trains[0][0][0])}")
-    # print(f"y_trains:{len(y_trains)}*{len(y_trains[0])}*{len(y_trains[0][0])}")
-
-    # ---訓練データ(x_train)リサイズ---
-    start = time.time()
-    # x_trains_resize: [train_data_num*spike_data_num, 120, 120], y_trains_resize: [train_data_num, 120, 120]
-    x_trains_resize_list = x_trains_resize(x_trains)
-    y_trains_resize_list = y_trains_resize(y_trains)
-    end = time.time()
-    # print("resize_time:{}".format(end - start))
-
-    # ---訓練データ(x_train)拡張---
-    # start = time.time()
-    x_trains_expansion_list, y_trains_expansion_list = data_expansion_main(x_trains_resize_list, y_trains_resize_list)
-    # end = time.time()
-    # print("expansion_time:{}".format(end - start))
-
-    return x_trains_expansion_list, y_trains_expansion_list
+    # return x_trains_expansion_list, y_trains_expansion_list, value_filename
+    return x_trains_resize_list, y_trains_resize_list, value_filename
 
 
 def random_folder_select(dirname_main):
@@ -139,6 +127,35 @@ def load_data(filename):
         # count += 1
         # if count == 10:
         #     break
+
+    print("load_data_end")
+    print(
+        f"x_trains:{len(spike_data_list)}*{len(spike_data_list[0])}*{len(spike_data_list[0][0])}*{len(spike_data_list[0][0][0])}")
+    print(f"y_trains:{len(teacher_data_list)}*{len(teacher_data_list[0])}*{len(teacher_data_list[0][0])}")
+
+    return spike_data_list, teacher_data_list
+
+
+def load_data_3D(filename):
+    # spikeファイル読み込み:X_train
+    spike_data_list = []
+    teacher_data_list = []
+    count = 0
+    for file in filename:
+        print(file)
+        for i in range(dataset_num_3D):
+            # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
+            load_spike_path = os.path.join(dirname_main, file, "img1")
+            # print(load_spike_path)
+            # 読み込むファイル名例：201~400
+            load_npy_path = list(
+                map(lambda x: load_spike_path + "\\img1_" + str(x + i * skip_data_num) + ".npy", np.arange(spike_data_num)))
+            spike_data_temp = list(map(lambda x: np.load(x), load_npy_path))
+            spike_data_list.append(spike_data_temp)
+
+            y_path = os.path.join(dirname_main, file, "img0")
+            load_y_path = y_path + "\\img0_" + str(spike_data_num + i * skip_data_num) + ".npy"
+            teacher_data_list.append(np.load(load_y_path))
 
     print("load_data_end")
     print(
@@ -251,6 +268,41 @@ def data_expansion_func(x_train, y_train):
     return x_trains1, y_trains1
 
 
+def data_3D_main(x_trains, y_trains):
+    # x_trains:[train_data_num, spike_data_num, 120, 120]
+    # y_trains:[train_data_num, 120, 120]
+    # x_trains_3D_list: [train_data_num, spike_data_num, 120, 120, 1]
+    # y_trains_3D_list: [train_data_num, 120, 120, 1]
+    # データ拡張
+    x_trains_3D_list = []
+    y_trains_3D_list = []
+    for i in range(len(x_trains)):
+        x_temp, y_temp = data_3D_func(x_trains[i], y_trains[i])
+        x_trains_3D_list.append(x_temp)
+        y_trains_3D_list.append(y_temp)
+
+    print("data_3D_end")
+    print(
+        f"x_trains_3D:{len(x_trains_3D_list)}*{len(x_trains_3D_list[0])}*{len(x_trains_3D_list[0][0])}*{len(x_trains_3D_list[0][0][0])}*{len(x_trains_3D_list[0][0][0][0])}")
+    print(
+        f"y_trains_3D:{len(y_trains_3D_list)}*{len(y_trains_3D_list[0])}*{len(y_trains_3D_list[0][0])}*{len(y_trains_3D_list[0][0][0])}")
+
+    return x_trains_3D_list, y_trains_3D_list
+
+
+def data_3D_func(x_train, y_train):
+    x_trains1 = []
+    y_trains1 = []
+
+    # データ分割
+    for i in range(spike_data_num):
+        x_trains1.append(x_train[i])
+
+    y_trains1.append(y_train)
+
+    return x_trains1, y_trains1
+
+
 def plot_history(history, path):
     plt.figure(figsize=(12, 8))
     # plt.subplots_adjust(hspace=0.3)
@@ -321,3 +373,35 @@ def pre_concatenate(x_pre):
             col_c = np.concatenate([col_c, row_c], 1)
 
     return col_c
+
+#
+# def load_dataset_predict(filename):
+#     # train_filename = natsorted(train_filename)
+#     # value_filename = natsorted(value_filename)
+#     # print(train_filename)
+#     # print(value_filename)
+#
+#     # ---訓練データ(x_train)読み込み---
+#     start = time.time()
+#     # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
+#     x_trains, y_trains = load_data(filename)
+#     end = time.time()
+#     # print("load_data_time:{}".format(end - start))
+#     # print(f"x_trains:{len(x_trains)}*{len(x_trains[0])}*{len(x_trains[0][0])}*{len(x_trains[0][0][0])}")
+#     # print(f"y_trains:{len(y_trains)}*{len(y_trains[0])}*{len(y_trains[0][0])}")
+#
+#     # ---訓練データ(x_train)リサイズ---
+#     start = time.time()
+#     # x_trains_resize: [train_data_num*spike_data_num, 120, 120], y_trains_resize: [train_data_num, 120, 120]
+#     x_trains_resize_list = x_trains_resize(x_trains)
+#     y_trains_resize_list = y_trains_resize(y_trains)
+#     end = time.time()
+#     # print("resize_time:{}".format(end - start))
+#
+#     # ---訓練データ(x_train)拡張---
+#     # start = time.time()
+#     x_trains_expansion_list, y_trains_expansion_list = data_expansion_main(x_trains_resize_list, y_trains_resize_list)
+#     # end = time.time()
+#     # print("expansion_time:{}".format(end - start))
+#
+#     return x_trains_expansion_list, y_trains_expansion_list

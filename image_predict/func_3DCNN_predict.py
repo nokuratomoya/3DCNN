@@ -14,14 +14,14 @@ from natsort import natsorted
 import multiprocessing
 import time
 
-from global_value import get_now
+from global_value import get_now, pixel_size, split_num
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-split_num = 4  # 分割サイズ　split_num*split_num分割される
+
 resize = 120  # resize * resize pixel
 # pixel = int(resize / split_num)
-pixel = 30
+pixel = pixel_size
 # date = "20230125"
 date = get_now()
 # train_data_date = "20230120"
@@ -45,19 +45,19 @@ def load_dataset_predict(filename):
     # ---訓練データ(x_train)リサイズ---
     # x_trains_resize: [train_data_num*spike_data_num, 120, 120], y_trains_resize: [train_data_num, 120, 120]
     x_trains_resize_list = x_trains_resize(x_trains)
-    y_trains_resize_list = y_trains_resize(y_trains)
     x_trains_resize_list = np.array(x_trains_resize_list)
-    y_trains_resize_list = np.array(y_trains_resize_list)
+    # print(f"x_trains_resize_list:{np.shape(x_trains_resize_list)}")
+
     x_trains_resize_list = np.reshape(x_trains_resize_list, (
-    x_trains_resize_list.shape[1], x_trains_resize_list.shape[2], x_trains_resize_list.shape[3]))
-    y_trains_resize_list = np.resize(y_trains_resize_list,
-                                     (y_trains_resize_list.shape[1], y_trains_resize_list.shape[2]))
+        x_trains_resize_list.shape[1], x_trains_resize_list.shape[2], x_trains_resize_list.shape[3]))
 
     # ---訓練データの(split_num*split_num)分割---
     # x_trains_split: [train_data_num*spike_data_num, split_num * split_num, pixel, pixel]
     # y_trains_split: [train_data_num, split_num * split_num, pixel, pixel]
     # x_trains_split_list, y_trains_split_list = data_split(x_trains_resize_list, y_trains_resize_list)
     x_trains_split_list = data_split(x_trains_resize_list)
+
+    # print(f"x_trains_split_list:{np.shape(x_trains_resize_list)}")
     return x_trains_split_list
 
 
@@ -104,17 +104,17 @@ def load_dataset_predict_3D(filename, i):
     # y_trains_resize_list = y_trains_resize(y_trains)
     x_trains_resize_list = np.array(x_trains_resize_list)
     # y_trains_resize_list = np.array(y_trains_resize_list)
-    x_trains_resize_list = np.reshape(x_trains_resize_list, (
-    x_trains_resize_list.shape[1], x_trains_resize_list.shape[2], x_trains_resize_list.shape[3]))
-    # y_trains_resize_list = np.resize(y_trains_resize_list,
-    #                                  (y_trains_resize_list.shape[1], y_trains_resize_list.shape[2]))
+
+    # x_trains_resize_list = np.reshape(x_trains_resize_list, (
+    #     x_trains_resize_list.shape[1], x_trains_resize_list.shape[2], x_trains_resize_list.shape[3]))
+
 
     # ---訓練データの(split_num*split_num)分割---
     # x_trains_split: [train_data_num*spike_data_num, split_num * split_num, pixel, pixel]
     # y_trains_split: [train_data_num, split_num * split_num, pixel, pixel]
-    x_trains_split_list = data_split(x_trains_resize_list)
+    # x_trains_split_list = data_split(x_trains_resize_list)
 
-    return x_trains_split_list
+    return x_trains_resize_list
 
 
 def load_data_3D(filename, i):
@@ -250,11 +250,10 @@ def data_expansion_func(x_train, y_train):
 def data_split(x_train):
     x_trains = []
 
-
     # ---分割プログラム---
     # y_train_temp = np.split(y_train, split_num, 1)
     # for i in range(split_num):
-        # y_trains.append(np.split(y_train_temp[i], split_num))
+    # y_trains.append(np.split(y_train_temp[i], split_num))
 
     for i in range(len(x_train)):
         x_train_temp = np.split(x_train[i], split_num, 1)
