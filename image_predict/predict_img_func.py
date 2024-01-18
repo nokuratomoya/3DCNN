@@ -8,6 +8,7 @@ import os
 import pickle
 from global_value import BATCH_SIZE, dataset_num, model_date, pixel_size, split_num
 from natsort import natsorted
+import tensorflow as tf
 
 
 def predict_calc_save(pre_file, t_v, result_dirpath, EPOCHS, model):
@@ -18,6 +19,7 @@ def predict_calc_save(pre_file, t_v, result_dirpath, EPOCHS, model):
     x_pre = x_pre[:, :, :, :, np.newaxis]
 
     x_pre = model.predict(x_pre)
+    # print(x_pre.shape)
     x_pre *= 255.0
     x_pre = x_pre.reshape(split_num * split_num, pixel_size, pixel_size)
     if split_num == 1:
@@ -40,7 +42,8 @@ def predict_calc_save(pre_file, t_v, result_dirpath, EPOCHS, model):
 def predict_image(model_name, EPOCHS):
     result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + model_date + r'\\' + model_name + '\\'  # k_20
     model_h5 = result_dirpath + "model" + f'\model_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.h5'
-    model = load_model(model_h5)
+    # model = load_model(model_h5)
+    model = load_model(model_h5, custom_objects={"ssim_loss": ssim_loss})
 
     # unused_data(テストデータ)
     load_unused_dir = result_dirpath + f"model\\test_data={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.txt"
@@ -61,4 +64,8 @@ def predict_image(model_name, EPOCHS):
         print(f"finished:{i}")
 
 
+def ssim_loss(y_true, y_pred):
+    return 1 - tf.reduce_mean(tf.image.ssim(y_true, y_pred,
+                                            max_val=1.0, filter_size=11,
+                                            filter_sigma=1.5, k1=0.01, k2=0.03))
 

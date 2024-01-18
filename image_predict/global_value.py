@@ -1,10 +1,10 @@
 BATCH_SIZE = 16
-dataset_num = 320
+dataset_num = 960
 
 # train_data_date = "20230120"
 
-model_date = "20231205"
-time_size = 100
+model_date = "20240111"
+time_size = 20
 # time_size = [40, 60, 80]
 xy_size = 3
 pixel_size = 120
@@ -19,8 +19,7 @@ split_num = 1  # 分割サイズ　split_num*split_num分割される
 # E = ([1057, 1070, 930], [864, 1044, 905], [728, 1059, 755])  # 20230704
 # E = ([1499, 1048, 1567], [1075, 840, 613], [1000, 925, 904])  # 20230707
 # E = ([623, 853, 676], [1259, 845, 1160], [922, 835, 115])  # 20230712
-E = 2104
-
+E = 1179
 
 import datetime
 

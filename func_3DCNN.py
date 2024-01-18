@@ -24,30 +24,31 @@ resize = 120  # resize * resize pixel
 pixel = 120
 # date = "20230125"
 date = get_now()
-train_data_date = "20230120"
-train_data_num = 320
-value_data_num = 400 - train_data_num
-spike_data_num = 100
+data_num = 400
+train_data_num = int(data_num * 0.8)
+value_data_num = data_num - train_data_num
+spike_data_num = 30
 # 刺激画像が始まる位置(教師画像は+1)
 stim_head = 201
 # データ拡張数
 expansion_num = 1
 
 # 三次元出力用
-output_3D = True
-skip_data_num = 23
+output_3D = False
+skip_data_num = 101
 dataset_num_3D = int((800 - spike_data_num) / skip_data_num)
 
-dirname_main = r'F:\train_data\20231129\stim400_cycle800ms'
+dirname_main = r'F:\train_data\20240109\sustained\0to399'
 
 
 def load_dataset():
     train_filename, value_filename = random_folder_select(dirname_main)
-    train_filename = natsorted(train_filename)
-    value_filename = natsorted(value_filename)
+    # train_filename = natsorted(train_filename)
+    # value_filename = natsorted(value_filename)
     print(train_filename)
+    print(len(train_filename))
     print(value_filename)
-
+    print(len(value_filename))
     # ---訓練データ(x_train)読み込み---
     start = time.time()
 
@@ -91,18 +92,25 @@ def load_dataset():
 
 
 def random_folder_select(dirname_main):
+    # img0 -> trainに使用するファイル
+    # img1 -> valueに使用するファイル
     used_filename = []
+
     all_filename = natsorted(os.listdir(dirname_main))
+    used_filename.append(all_filename[0])
     while len(used_filename) != train_data_num:
+
         list_temp = random.choice(all_filename)
         if list_temp in used_filename:
+            continue
+        elif list_temp == all_filename[1]:
             continue
         else:
             used_filename.append(list_temp)
 
     unused_filename = set(all_filename) ^ set(used_filename)
 
-    return used_filename, list(unused_filename)
+    return natsorted(used_filename), natsorted(list(unused_filename))
 
 
 def load_data(filename):

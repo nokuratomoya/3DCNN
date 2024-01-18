@@ -1,5 +1,5 @@
-from func_3DCNN import load_dataset, date, save_data_csv, save_data_txt, plot_history, hist_csv_save
-from func_model import model_build
+from func_3DCNN import load_dataset, date, save_data_csv, save_data_txt, plot_history, hist_csv_save, dirname_main, spike_data_num
+from func_model import model_build, ssim_loss
 from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np
 import pathlib
@@ -11,10 +11,11 @@ from natsort import natsorted
 EPOCHS = 10000
 BATCH_SIZE = 16
 
-time_size = 100
+time_size = spike_data_num
 xy_size = 3
 filter_size = 4
 
+train_dir = dirname_main
 
 def main():
     # dataset準備
@@ -44,19 +45,19 @@ def main():
 
     save_data = ["filter", "time", "xy", "EPOCHS"]
     save_data_csv(save_data, result_dirpath + r"\EPOCHS_save.csv")
-    model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size)
+    model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size, result_dirpath)
     # for i in time_size:
     #     for j in xy_size:
     #         model_kernel_change(x_trains, y_trains, unused_filename, dataset_num, i, j, filter_size)
 
 
-def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size):
+def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size, result_date_dirpath):
     start_train_time = time.perf_counter()
     input_shape = (len(x_trains[0]), len(x_trains[0][0]), len(x_trains[0][0][0]), 1)
     model = model_build(time_size, xy_size, filter_size, input_shape)
 
     # 打ち切り設定
-    early_stopping = EarlyStopping(monitor="mean_squared_error", min_delta=0.000, patience=100)
+    early_stopping = EarlyStopping(monitor="ssim_loss", min_delta=0.000, patience=100)
 
     # history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
     history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1, callbacks=[early_stopping])
@@ -68,6 +69,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
     result_dirpath = r"results\\" + date + f'\\result_kernel_{time_size}_{xy_size}_{xy_size}\\'
     os.makedirs(result_dirpath, exist_ok=True)
 
+    # historyの保存
     n_EPOCHS = len(history.history["loss"])
 
     result_filepath = result_dirpath + f'result_dataset={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.png'
@@ -83,7 +85,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
 
     # used_file
     save_used_dir = result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.txt"
-    train_dir = r"F:\train_data\20231129\stim400_cycle800ms"
+    # train_dir = r"F:\train_data\20231129\stim400_cycle800ms"
     all_filename = os.listdir(train_dir)
     used_filename = set(all_filename) ^ set(unused_filename)
     used_filename = natsorted(used_filename)
@@ -102,7 +104,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
 
     # CSVファイルを追記モードで開く
     save_data = [filter_size, time_size, xy_size, n_EPOCHS]
-    save_EPOCHS_csvname = r"C:\Users\AIlab\labo\3DCNN\results\\" + date + r"\EPOCHS_save.csv"
+    save_EPOCHS_csvname = result_date_dirpath + r"\EPOCHS_save.csv"
     save_data_csv(save_data, save_EPOCHS_csvname)
 
 

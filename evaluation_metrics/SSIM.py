@@ -64,7 +64,7 @@ def read_file(folder_path):
 
 def image_open(filename, predict_path, t_v):
     original_dir = predict_path + f"\\predict\\{t_v}_predict" + "\\pre_" + filename + f"_dataset={dataset_num}_e={E}_b={BATCH_SIZE}.jpg"
-    predict_dir = predict_path + f"\\predict\\{t_v}_predict\\mutual_info\\" + filename + "_resize.jpg"
+    predict_dir = predict_path + f"\\predict\\{t_v}_predict\\resize_img\\" + filename + "_resize.jpg"
     ori_img = Image.open(predict_dir)
     pre_img = Image.open(original_dir)
     ori_img = np.array(ori_img)

@@ -25,7 +25,7 @@ def predict_image_3D(model_name, EPOCHS):
     used_filename = natsorted(pickle.load(f))
 
     # 10個だけにする
-    used_filename = used_filename[:10]
+    used_filename = used_filename[:3]
     f.close()
     for i in used_filename:
         predict_calc_3D(i, "train", result_dirpath, EPOCHS, model)

@@ -14,7 +14,7 @@ from natsort import natsorted
 import multiprocessing
 import time
 
-from global_value import get_now, pixel_size, split_num
+from global_value import get_now, pixel_size, split_num, time_size, dataset_num
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -25,13 +25,13 @@ pixel = pixel_size
 # date = "20230125"
 date = get_now()
 # train_data_date = "20230120"
-train_data_num = 320
+train_data_num = dataset_num
 value_data_num = 400 - train_data_num
-spike_data_num = 100
+spike_data_num = time_size
 # 刺激画像が始まる位置(教師画像は+1)
 stim_head = 201
 
-dirname_main = r'F:\train_data\20231129\stim400_cycle800ms'
+dirname_main = r'F:\train_data\20240108\0to1199'
 
 
 def load_dataset_predict(filename):

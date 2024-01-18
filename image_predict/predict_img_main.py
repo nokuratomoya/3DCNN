@@ -1,12 +1,12 @@
 from predict_img_func import predict_image
 from global_value import time_size, xy_size, E
 
+
 # E = 1794
 # time_size = 100
 # xy_size = 30
 
 def main():
-
     # for i, time in enumerate(time_size):
     #     for j, xy in enumerate(xy_size):
     #         model_name = f"result_kernel_{time}_{xy}_{xy}"

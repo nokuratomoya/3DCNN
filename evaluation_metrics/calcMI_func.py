@@ -8,9 +8,10 @@ import pickle
 import csv
 from natsort import natsorted
 # ファイルのimport
-from global_value import BATCH_SIZE, dataset_num, date,  train_data_date
+from global_value import BATCH_SIZE, dataset_num, date, train_data_date
+import cv2
 
-#　変数の定義
+# 　変数の定義
 x = 120
 y = 120
 bytesize = 1
@@ -20,10 +21,12 @@ stim_head = 201 + 1
 global crop_savefile
 global pre_filepath
 
+dirmain = r"F:\train_data\20240108\0to1199"
+
 
 def calc_test_MI(model_name, EPOCHS):
     # unused_fileの読み込み
-    result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + date + "\\" + model_name + "\\"   # k_20
+    result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + date + "\\" + model_name + "\\"  # k_20
     load_unused_dir = result_dirpath + f"model\\test_data={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.txt"
     f = open(load_unused_dir, 'rb')
     unused_filename = pickle.load(f)
@@ -56,7 +59,6 @@ def calc_test_MI(model_name, EPOCHS):
 
 
 def calc_train_MI(model_name, EPOCHS):
-
     result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + date + "\\" + model_name + "\\"
     load_used_dir = result_dirpath + f"model\\train_data={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.txt"
     f = open(load_used_dir, 'rb')
@@ -126,7 +128,6 @@ def mutual_info_quantity(pre_file, t_v, model_name, EPOCHS):
             p_a[m] += p_ab[m][n]
             p_b[n] += p_ab[m][n]
 
-
     # e(a):aのエントロピー, e(b):bのエントロピー, e(a, b):a,bの結合エントロピー
     e_a = 0
     e_b = 0
@@ -143,8 +144,8 @@ def mutual_info_quantity(pre_file, t_v, model_name, EPOCHS):
                 e_ab -= p_ab[m][n] * np.log2(p_ab[m][n])
 
     mutual = e_a + e_b - e_ab
-    print(f"e_a:{e_a}, e_b:{e_b}, e_ab:{e_ab}")
-    print(mutual)
+    # print(f"e_a:{e_a}, e_b:{e_b}, e_ab:{e_ab}")
+    # print(mutual)
 
     # 図の作成
     # send_data
@@ -171,14 +172,19 @@ def data_read(pre_file, t_v, model_name, EPOCHS):
     dirname1 = r"C:\Users\AIlab\labo\3DCNN\results\\" + date + "\\" + model_name + "\\predict\\" + t_v + "_predict\\"  # predict_k20 , train
     pre_filepath = dirname1 + f'pre_{pre_file}_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.jpg'
     # dirname2 = r"C:\Users\AIlab\labo\3DCNN\train_data\\" + train_data_date + "\\" + pre_file + "\\image\\img0\\img0_0.jpg"
-    dirname2 = r"F:\train_data\20231129\stim400_cycle800ms\\" + pre_file + f"\\image\\img0\\img0_{stim_head}.jpg"
+    dirname2 = dirmain + "\\" + pre_file + f"\\image\\img0\\img0_{stim_head}.jpg"
+    dirname2_npy = dirmain + "\\" + pre_file + f"\\img0\\img0_{stim_head}.npy"
     # フォルダ作成
-    mi_dirname = dirname1 + "mutual_info\\"
+    mi_dirname = dirname1 + "resize_img\\"
     os.makedirs(mi_dirname, exist_ok=True)
 
     # train_data サイズ変更 128*128 -> 120*120
     crop_savefile = mi_dirname + pre_file + "_resize.jpg"
     crop_img(crop_savefile, dirname2, 120)
+
+    # resize_save
+    os.makedirs(mi_dirname + "save_npy", exist_ok=True)
+    resize_npy_save(mi_dirname + "save_npy\\" + pre_file + "_resize.npy", dirname2_npy)
 
     data1 = np.asarray(Image.open(pre_filepath))
     data1 = np.ravel(data1).astype(int)
@@ -196,3 +202,11 @@ def crop_img(savefile, path, crop_w_h):
                        (img_width + crop_w_h) // 2,
                        (img_height + crop_w_h) // 2))
     pil_img.save(savefile)
+
+
+def resize_npy_save(save_dir, load_npy, resize_w_h=120):
+    img = np.load(load_npy)
+    half_size = int(img.shape[0] / 2)
+    img = img[half_size - int(resize_w_h / 2):half_size + int(resize_w_h / 2),
+          half_size - int(resize_w_h / 2):half_size + int(resize_w_h / 2)]
+    np.save(save_dir, img)

@@ -9,6 +9,9 @@ from global_value import BATCH_SIZE, dataset_num, date
 from natsort import natsorted
 from scipy.stats import spearmanr
 
+plot_bool = False
+NCC_bool = False
+
 
 def NCC(model_name, EPOCHS):
     abs_path = r"C:\Users\AIlab\labo\3DCNN\results\\"
@@ -16,13 +19,13 @@ def NCC(model_name, EPOCHS):
     # train_pre_data_dir = abs_path + date + r"\predict_k100\train_predict"
     # train_resize_dir = abs_path + date + r"\predict_k100\train_predict\mutual_info"
     train_pre_data_dir = abs_path + date + '\\' + model_name + r"\predict\train_predict"
-    train_resize_dir = abs_path + date + '\\' + model_name + r"\predict\train_predict\mutual_info"
+    train_resize_dir = abs_path + date + '\\' + model_name + r"\predict\train_predict\resize_img"
 
     # 評価用データ
     # vali_pre_data_dir = abs_path + date + r"\predict_k100\test_predict"
     # vali_resize_dir = abs_path + date + r"\predict_k100\test_predict\mutual_info"
     vali_pre_data_dir = abs_path + date + '\\' + model_name + r"\predict\test_predict"
-    vali_resize_dir = abs_path + date + '\\' + model_name + r"\predict\test_predict\mutual_info"
+    vali_resize_dir = abs_path + date + '\\' + model_name + r"\predict\test_predict\resize_img"
     # 60枚すべてのNCC求める
     ########################
 
@@ -54,21 +57,31 @@ def NCC(model_name, EPOCHS):
     spearman_train = []
     # 訓練データ
     for i in used_filename:
-        original_dir = train_pre_data_dir + "\\pre_" + i + f"_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.jpg"
+        # original_dir = train_pre_data_dir + "\\pre_" + i + f"_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.jpg"
+        #
+        # predict_dir = train_resize_dir + "\\" + i + "_resize.jpg"
+        #
+        # ####
+        # ori_img = Image.open(predict_dir)
+        # pre_img = Image.open(original_dir)
+        # # numpy配列に
+        # ori_data = np.array(ori_img)
+        # pre_data = np.array(pre_img)
+        #####################
+        original_dir = train_pre_data_dir + "\\save_npy\\pre_" + i + f"_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.npy"
 
-        predict_dir = train_resize_dir + "\\" + i + "_resize.jpg"
+        predict_dir = train_resize_dir + "\\save_npy\\" + i + "_resize.npy"
 
-        ####
-        ori_img = Image.open(predict_dir)
-        pre_img = Image.open(original_dir)
-        # numpy配列に
-        ori_data = np.array(ori_img)
-        pre_data = np.array(pre_img)
+        ori_data = np.load(original_dir)
+        pre_data = np.load(predict_dir)
+        ###########################
+
         # 平坦化
         ori_data = np.ravel(ori_data)
         pre_data = np.ravel(pre_data)
-
-        NCC_plot_train(NCC_save_dir, i, ori_data, pre_data)
+        if plot_bool:
+            NCC_plot_train(NCC_save_dir, i, ori_data, pre_data)
+        # NCC_plot_train(NCC_save_dir, i, ori_data, pre_data)
         """
         # 内積 (http://www.sanko-shoko.net/note.php?id=f7j3)
         inn_1 = int(np.correlate(ori_data, pre_data))  # a, b
@@ -76,9 +89,11 @@ def NCC(model_name, EPOCHS):
         inn_3 = int(np.correlate(pre_data, pre_data))  # b, b
         NCC_num = inn_1 / math.sqrt((inn_2 * inn_3))
         """
-
-        NCC_train.append(NCC_calc(ori_data, pre_data))
+        if NCC_bool:
+            NCC_train.append(NCC_calc(ori_data, pre_data))
         spearman_train.append(spearmanr(ori_data, pre_data)[0])
+
+        print(f"{i} is finished!!")
 
     # NCC_vali = ["評価データ"]
     NCC_vali = []
@@ -86,18 +101,28 @@ def NCC(model_name, EPOCHS):
     spearman_vali = []
     # 評価データ
     for i in unused_filename:
-        original_dir = vali_pre_data_dir + "\\pre_" + i + f"_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.jpg"
-        predict_dir = vali_resize_dir + "\\" + i + "_resize.jpg"
-        ori_img = Image.open(predict_dir)
-        pre_img = Image.open(original_dir)
-        # numpy配列に
-        ori_data = np.array(ori_img)
-        pre_data = np.array(pre_img)
+        # original_dir = vali_pre_data_dir + "\\pre_" + i + f"_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.jpg"
+        # predict_dir = vali_resize_dir + "\\" + i + "_resize.jpg"
+        # ori_img = Image.open(predict_dir)
+        # pre_img = Image.open(original_dir)
+        # # numpy配列に
+        # ori_data = np.array(ori_img)
+        # pre_data = np.array(pre_img)
+
+        original_dir = vali_pre_data_dir + "\\save_npy\\pre_" + i + f"_dataset={dataset_num}_e={EPOCHS}_b={BATCH_SIZE}.npy"
+
+        predict_dir = vali_resize_dir + "\\save_npy\\" + i + "_resize.npy"
+
+        ori_data = np.load(original_dir)
+        pre_data = np.load(predict_dir)
+
+
         # 平坦化
         ori_data = np.ravel(ori_data)
         pre_data = np.ravel(pre_data)
-
-        NCC_plot_test(NCC_save_dir, i, ori_data, pre_data)
+        if plot_bool:
+            NCC_plot_test(NCC_save_dir, i, ori_data, pre_data)
+        # NCC_plot_test(NCC_save_dir, i, ori_data, pre_data)
         """
         # 内積 (http://www.sanko-shoko.net/note.php?id=f7j3)
         inn_1 = int(np.correlate(ori_data, pre_data))  # a, b
@@ -115,9 +140,12 @@ def NCC(model_name, EPOCHS):
         #
         # NCC_vali_num = e1 / (math.sqrt(e2) * math.sqrt(e3))
         # 相関係数を求める
-        NCC_vali.append(NCC_calc(ori_data, pre_data))
+        if NCC_bool:
+            NCC_vali.append(NCC_calc(ori_data, pre_data))
         # スピアマンの順位相関係数を求める
         spearman_vali.append(spearmanr(ori_data, pre_data)[0])
+
+        print(f"{i} is finished!!")
 
     NCC_save_path = NCC_save_dir + "\\NCC_total.csv"
     spearman_save_path = NCC_save_dir + "\\spearman_total.csv"
@@ -126,14 +154,15 @@ def NCC(model_name, EPOCHS):
     # unused_filename.insert(0, "")
     # 値の整理
     # csvに保存
-    with open(NCC_save_path, "w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(used_filename)
-        writer.writerow(NCC_train)
-        writer.writerow(unused_filename)
-        writer.writerow(NCC_vali)
+    if NCC_bool:
+        with open(NCC_save_path, "w", newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(used_filename)
+            writer.writerow(NCC_train)
+            writer.writerow(unused_filename)
+            writer.writerow(NCC_vali)
 
-    f.close()
+        f.close()
 
     with open(spearman_save_path, "w", newline='') as file:
         writer = csv.writer(file)

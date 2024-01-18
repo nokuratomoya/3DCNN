@@ -1,14 +1,16 @@
 from PIL import Image
 import os
 from natsort import natsorted
+
+
 def main():
-
-
+    date = "20231224"
+    image_num = "img2"
     # JPGファイルがあるディレクトリパス
-    input_folder = r'C:\Users\AIlab\labo\3DCNN\results\20231205\result_kernel_100_3_3\predict\train_predict_3D\img0'
+    input_folder = r'C:\Users\AIlab\labo\3DCNN\results\\' + date + r'\result_kernel_100_3_3\predict\train_predict_3D\\' + image_num
 
     # GIFを保存するファイル名とパス
-    output_gif = r'C:\Users\AIlab\labo\3DCNN\results\20231205\result_kernel_100_3_3\predict/output_img0.gif'
+    output_gif = r'C:\Users\AIlab\labo\3DCNN\results\\' + date + rf'\result_kernel_100_3_3\predict/output_{image_num}.gif'
 
     # 画像ファイルのリストを取得
     image_list = [f for f in natsorted(os.listdir(input_folder)) if f.endswith('.jpg')]
