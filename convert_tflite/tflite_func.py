@@ -14,28 +14,22 @@ from natsort import natsorted
 import multiprocessing
 import time
 
-from global_value import get_now, pixel_size, split_num, time_size, dataset_num, spike_data_name, predict_file_path, \
-    stim_head
+from global_value import *
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-resize = pixel_size  # resize * resize pixel
+
+resize = 120  # resize * resize pixel
 # pixel = int(resize / split_num)
 pixel = pixel_size
 # date = "20230125"
-date = get_now()
+# date = get_now()
 # train_data_date = "20230120"
 train_data_num = dataset_num
 value_data_num = 400 - train_data_num
 spike_data_num = time_size
-
-dirname_main = r'H:\train_data\20240711\0to1199'
-
-
-# LNP_spike = r"F:\train_data\LNPspike\spikedata_original"
-# LNP_spike_path = r"G:\LNPmodel\train_data\20240619\poisson_dt7.5e-06\0to99"
-#
-# LNI_spike_path = r"G:\LNImodel\train_data\20240619\gain2_dt0.05\0to99"
+# 刺激画像が始まる位置(教師画像は+1)
+stim_head = 201
 
 
 def load_dataset_predict(filename):
@@ -72,43 +66,12 @@ def load_data(filename):
     teacher_data_list = []
     count = 0
 
-    # LNPspikeの場合
-    # if spike_data_name == "LNP":
-    #     load_spike_path = LNP_spike + "\\spike_" + filename + "\\"
-    #     load_npy_path = list(
-    #         map(lambda x: load_spike_path + "\\spike_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
-    if spike_data_name == "LNP":
-        LNP_spike_path = predict_file_path
-        load_spike_path = os.path.join(LNP_spike_path, filename, "img1")
-        # print(load_spike_path)
-        # 読み込むファイル名例：201~400
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
-        # print(load_npy_path)
-
-    # emulatorの場合
-    elif spike_data_name == "emulator":
-        # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
-        load_spike_path = os.path.join(dirname_main, filename, "img1")
-        # print(load_spike_path)
-        # 読み込むファイル名例：201~400
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
-
-    elif spike_data_name == "LNI":
-        LNI_spike_path = predict_file_path
-        load_spike_path = os.path.join(LNI_spike_path, filename, "img1")
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
-
-    elif spike_data_name == "emulator_25":
-        load_spike_path = os.path.join(predict_file_path, filename, "img1_5")
-        load_npy_path = [
-            os.path.join(load_spike_path, f"img1_{stim_head + i}_{j}.npy")
-            for i in range(int(spike_data_num / 2))
-            for j in range(2)
-        ]
-
+    # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
+    load_spike_path = os.path.join(dirname_main, filename, "img1")
+    # print(load_spike_path)
+    # 読み込むファイル名例：201~400
+    load_npy_path = list(
+        map(lambda x: load_spike_path + "\\img1_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
     spike_data_temp = list(map(lambda x: np.load(x), load_npy_path))
     spike_data_list.append(spike_data_temp)
 
@@ -124,15 +87,11 @@ def load_data(filename):
     return spike_data_list, teacher_data_list
 
 
-def load_dataset_predict_3D(filename, pre_start_num, pre_end_num):
+def load_dataset_predict_3D(filename, i):
     # ---訓練データ(x_train)読み込み---
     # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
     # x_trains, y_trains = load_data_3D(filename, i)
-    x_trains = []
-    for i in range(pre_end_num - pre_start_num + 1):
-        # print(f"{i + pre_start_num}枚目のデータを読み込み中...")
-        x_train = load_data_3D(filename, pre_start_num - spike_data_num + i + 1)
-        x_trains.append(x_train)
+    x_trains = load_data_3D(filename, i)
     # print("load_data_time:{}".format(end - start))
     # print(f"x_trains:{len(x_trains)}*{len(x_trains[0])}*{len(x_trains[0][0])}*{len(x_trains[0][0][0])}")
     # print(f"y_trains:{len(y_trains)}*{len(y_trains[0])}*{len(y_trains[0][0])}")
@@ -142,84 +101,43 @@ def load_dataset_predict_3D(filename, pre_start_num, pre_end_num):
     x_trains_resize_list = x_trains_resize(x_trains)
     # y_trains_resize_list = y_trains_resize(y_trains)
     x_trains_resize_list = np.array(x_trains_resize_list)
-
     # y_trains_resize_list = np.array(y_trains_resize_list)
 
     # x_trains_resize_list = np.reshape(x_trains_resize_list, (
     #     x_trains_resize_list.shape[1], x_trains_resize_list.shape[2], x_trains_resize_list.shape[3]))
 
+
     # ---訓練データの(split_num*split_num)分割---
     # x_trains_split: [train_data_num*spike_data_num, split_num * split_num, pixel, pixel]
     # y_trains_split: [train_data_num, split_num * split_num, pixel, pixel]
     # x_trains_split_list = data_split(x_trains_resize_list)
-    # print("x_trains_resize_list.shape:", x_trains_resize_list.shape)
 
-    pass
     return x_trains_resize_list
 
 
 def load_data_3D(filename, i):
-    # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
+    # spikeファイル読み込み:X_train
     spike_data_list = []
+    teacher_data_list = []
+    count = 0
 
-    if spike_data_name == "LNP":
-        LNP_spike_path = predict_file_path
-        load_spike_path = os.path.join(LNP_spike_path, filename, "img1")
-        # print(load_spike_path)
-        # 読み込むファイル名例：201~400
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + i) + ".npy", np.arange(spike_data_num)))
-        # print(load_npy_path)
-
-    # emulatorの場合
-    elif spike_data_name == "emulator":
-        # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
-        load_spike_path = os.path.join(dirname_main, filename, "img1")
-        # print(load_spike_path)
-        # 読み込むファイル名例：201~400
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + i) + ".npy", np.arange(spike_data_num)))
-
-    elif spike_data_name == "LNI":
-        LNI_spike_path = predict_file_path
-        load_spike_path = os.path.join(LNI_spike_path, filename, "img1")
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + i) + ".npy", np.arange(spike_data_num)))
-
-    elif spike_data_name == "emulator_25":
-        load_spike_path = os.path.join(predict_file_path, filename, "img1_5")
-        load_npy_path = [
-            os.path.join(load_spike_path, f"img1_{stim_head + i}_{j}.npy")
-            for i in range(int(spike_data_num / 2))
-            for j in range(2)
-        ]
-
+    # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
+    load_spike_path = os.path.join(dirname_main, filename, "img1")
+    # print(load_spike_path)
+    # 読み込むファイル名例：201~400
+    load_npy_path = list(
+        map(lambda x: load_spike_path + "\\img1_" + str(x + i) + ".npy", np.arange(spike_data_num)))
     spike_data_temp = list(map(lambda x: np.load(x), load_npy_path))
-    # spike_data_list.append(spike_data_temp)
+    spike_data_list.append(spike_data_temp)
 
-    return spike_data_temp
+    # y_path = os.path.join(dirname_main, filename, "img0")
+    # load_y_path = y_path + "\\img0_" + str(stim_head + 1) + ".npy"
+    # teacher_data_list.append(np.load(load_y_path))
 
-
-# 指定のディレクトリ内のスパイクファイルを入力サイズに合うように読み取る
-# (dataset_num, spike_data_num, resize_pixel, resize_pixel)のリストを返す
-def load_spike_data(spike_file_name):
-    # スパイクファイルのリスト
-    spike_files = natsorted(os.listdir(spike_file_name))
-    # スパイクファイルの読み込み
-    spike_data_ori = list(map(lambda x: np.load(spike_file_name + "/" + x), spike_files))
-
-    # 入力サイズに合わせるために空の配列を追加
-    # (spike_data_num, resize_pixel, resize_pixel)のリストを返す ex) (50, 128, 128)
-    empty_array = list(np.zeros((spike_data_num - 1, spike_data_ori[0].shape[0], spike_data_ori[0].shape[1])))
-
-    # スパイクデータとの結合
-    spike_data_list = empty_array + spike_data_ori
-
-    spike_data_temp = []
-    for i in range(len(spike_data_ori)):
-        spike_data_temp.append(spike_data_list[i:i + spike_data_num])
-
-    spike_data_list = x_trains_resize(spike_data_temp)
+    # print("load_data_end")
+    # print(
+    #     f"x_trains:{len(spike_data_list)}*{len(spike_data_list[0])}*{len(spike_data_list[0][0])}*{len(spike_data_list[0][0][0])}")
+    # print(f"y_trains:{len(teacher_data_list)}*{len(teacher_data_list[0])}*{len(teacher_data_list[0][0])}")
 
     return spike_data_list
 
@@ -236,7 +154,7 @@ def load_npy(files):
 
 def x_trains_resize(x_trains):
     # x_trains:[train_data_num, spike_data_num, 128, 128]
-    # x_trains_resize:[train_data_num, spike_data_num, 120, 120]
+    # x_trains_resize:[train_data_num*spike_data_num, 120, 120]
     x_trains_resize_list = []
 
     half_size = int(len(x_trains[0][0]) / 2)

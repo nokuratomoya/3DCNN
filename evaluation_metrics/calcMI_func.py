@@ -8,20 +8,18 @@ import pickle
 import csv
 from natsort import natsorted
 # ファイルのimport
-from global_value import BATCH_SIZE, dataset_num, date, train_data_date
+from global_value import BATCH_SIZE, dataset_num, date, pixel_size
 import cv2
 
 # 　変数の定義
-x = 120
-y = 120
-bytesize = 1
+
 histgramX = 256
 histgramY = 256
 stim_head = 201 + 1
 global crop_savefile
 global pre_filepath
 
-dirmain = r"F:\train_data\20240108\0to1199"
+dirmain = r"H:\train_data\20240625\0to1199"
 
 
 def calc_test_MI(model_name, EPOCHS):
@@ -180,7 +178,7 @@ def data_read(pre_file, t_v, model_name, EPOCHS):
 
     # train_data サイズ変更 128*128 -> 120*120
     crop_savefile = mi_dirname + pre_file + "_resize.jpg"
-    crop_img(crop_savefile, dirname2, 120)
+    crop_img(crop_savefile, dirname2, pixel_size)
 
     # resize_save
     os.makedirs(mi_dirname + "save_npy", exist_ok=True)
@@ -204,7 +202,7 @@ def crop_img(savefile, path, crop_w_h):
     pil_img.save(savefile)
 
 
-def resize_npy_save(save_dir, load_npy, resize_w_h=120):
+def resize_npy_save(save_dir, load_npy, resize_w_h=pixel_size):
     img = np.load(load_npy)
     half_size = int(img.shape[0] / 2)
     img = img[half_size - int(resize_w_h / 2):half_size + int(resize_w_h / 2),

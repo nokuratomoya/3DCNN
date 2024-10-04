@@ -1,5 +1,6 @@
-from func_3DCNN import load_dataset, date, save_data_csv, save_data_txt, plot_history, hist_csv_save, dirname_main, spike_data_num
-from func_model import model_build, ssim_loss
+from func_3DCNN import load_dataset, date, save_data_csv, save_data_txt, data_num, plot_history, hist_csv_save, \
+    dirname_main, spike_data_num, spike_data_name, y_trains_save
+from func_model import model_build, ssim_loss, SID_model_build
 from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np
 import pathlib
@@ -16,6 +17,9 @@ xy_size = 3
 filter_size = 4
 
 train_dir = dirname_main
+
+model_name = "3D"
+
 
 def main():
     # dataset準備
@@ -39,13 +43,32 @@ def main():
     result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + date
     os.makedirs(result_dirpath, exist_ok=True)
 
+    # y_trains_save(y_trains, result_dirpath)
     # 複数
     # kernel_size = [5, 10, 20]
     # filter_size = [3, 5, 7]
 
-    save_data = ["filter", "time", "xy", "EPOCHS"]
+    save_data = ["filter", "time", "xy", "EPOCHS", spike_data_name]
     save_data_csv(save_data, result_dirpath + r"\EPOCHS_save.csv")
-    model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size, result_dirpath)
+    if model_name == "3D":
+        model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size, result_dirpath)
+    else:
+        x_trains = x_trains.reshape(x_trains.shape[0] * x_trains.shape[1], x_trains.shape[2], x_trains.shape[3],
+                                    x_trains.shape[4])
+        # y_trains = y_trains.reshape(y_trains.shape[0], y_trains.shape[2], y_trains.shape[3], y_trains.shape[4])
+        print(np.shape(x_trains), np.shape(y_trains))
+        # y_trainsの複製
+        y_trains = np.tile(y_trains, (1, spike_data_num, 1, 1, 1))
+        print(np.shape(y_trains))
+        pass
+        y_trains = y_trains.reshape(y_trains.shape[0] * y_trains.shape[1], y_trains.shape[2], y_trains.shape[3],
+                                    y_trains.shape[4])
+
+        print(np.shape(x_trains), np.shape(y_trains))
+
+        pass
+        model2D_SID(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size, result_dirpath)
+
     # for i in time_size:
     #     for j in xy_size:
     #         model_kernel_change(x_trains, y_trains, unused_filename, dataset_num, i, j, filter_size)
@@ -58,7 +81,7 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
 
     # 打ち切り設定
     early_stopping = EarlyStopping(monitor="ssim_loss", min_delta=0.000, patience=100)
-
+    # early_stopping = EarlyStopping(monitor="ssim_loss", min_delta=0.000, patience=50)
     # history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
     history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1, callbacks=[early_stopping])
 
@@ -81,16 +104,80 @@ def model3D(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size
     # unused_filename(評価データ)の保存
     save_unused_dir = result_dirpath + f"model\\test_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.txt"
     save_data_txt(unused_filename, save_unused_dir)
-    save_data_csv(list(unused_filename), result_dirpath + f"model\\test_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
+    save_data_csv(list(unused_filename),
+                  result_dirpath + f"model\\test_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
 
     # used_file
     save_used_dir = result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.txt"
     # train_dir = r"F:\train_data\20231129\stim400_cycle800ms"
-    all_filename = os.listdir(train_dir)
+    all_filename = natsorted(os.listdir(train_dir))
+    all_filename = all_filename[:data_num]
     used_filename = set(all_filename) ^ set(unused_filename)
     used_filename = natsorted(used_filename)
     save_data_txt(used_filename, save_used_dir)
-    save_data_csv(list(used_filename), result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
+    save_data_csv(list(used_filename),
+                  result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
+
+    # かかった時間の保存
+    save_elapsed_time = result_dirpath + f"model\\elapsed_time={round((end_train_time - start_train_time) / 60, 1)}min.txt"
+    save_data_txt((end_train_time - start_train_time), save_elapsed_time)
+
+    # plot_history(history)
+    plot_history(history, result_filepath)
+    hist_csv_save(history, history_filepath)
+
+    # n_EPOCHSの保存
+
+    # CSVファイルを追記モードで開く
+    save_data = [filter_size, time_size, xy_size, n_EPOCHS]
+    save_EPOCHS_csvname = result_date_dirpath + r"\EPOCHS_save.csv"
+    save_data_csv(save_data, save_EPOCHS_csvname)
+
+
+def model2D_SID(x_trains, y_trains, unused_filename, dataset_num, time_size, xy_size, filter_size, result_date_dirpath):
+    start_train_time = time.perf_counter()
+    # input_shape = (len(x_trains[0]), len(x_trains[0][0]), 1)
+    # model = model_build(time_size, xy_size, filter_size, input_shape)
+    model = SID_model_build()
+
+    # 打ち切り設定
+    early_stopping = EarlyStopping(monitor="ssim_loss", min_delta=0.000, patience=100)
+    # early_stopping = EarlyStopping(monitor="loss", min_delta=0.000, patience=100)
+    # history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
+    history = model.fit(x_trains, y_trains, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1, callbacks=[early_stopping])
+
+    end_train_time = time.perf_counter()
+    print(f"training_time:{(end_train_time - start_train_time) / 60}min")
+
+    # resultフォルダ作成
+    result_dirpath = r"results\\" + date + f'\\result_kernel_{time_size}_{xy_size}_{xy_size}\\'
+    os.makedirs(result_dirpath, exist_ok=True)
+
+    # historyの保存
+    n_EPOCHS = len(history.history["loss"])
+
+    result_filepath = result_dirpath + f'result_dataset={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.png'
+    model_savepath = result_dirpath + f"model\\model_dataset={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.h5"
+    history_filepath = result_dirpath + f"model\\history_dataset={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv"
+
+    model.save(model_savepath)
+
+    # unused_filename(評価データ)の保存
+    save_unused_dir = result_dirpath + f"model\\test_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.txt"
+    save_data_txt(unused_filename, save_unused_dir)
+    save_data_csv(list(unused_filename),
+                  result_dirpath + f"model\\test_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
+
+    # used_file
+    save_used_dir = result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.txt"
+    # train_dir = r"F:\train_data\20231129\stim400_cycle800ms"
+    all_filename = natsorted(os.listdir(train_dir))
+    all_filename = all_filename[:data_num]
+    used_filename = set(all_filename) ^ set(unused_filename)
+    used_filename = natsorted(used_filename)
+    save_data_txt(used_filename, save_used_dir)
+    save_data_csv(list(used_filename),
+                  result_dirpath + f"model\\train_data={dataset_num}_e={n_EPOCHS}_b={BATCH_SIZE}.csv")
 
     # かかった時間の保存
     save_elapsed_time = result_dirpath + f"model\\elapsed_time={round((end_train_time - start_train_time) / 60, 1)}min.txt"

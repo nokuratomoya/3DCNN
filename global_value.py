@@ -1,9 +1,9 @@
 BATCH_SIZE = 16
-dataset_num = 320 * 10
+dataset_num = 1200
 train_data_date = "20230120"
 
-date = "20231116"
-time_size = [5]
+# date = "20231116"
+time_size = [50]
 # time_size = [40, 60, 80]
 xy_size = [3]
 

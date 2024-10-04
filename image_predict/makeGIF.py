@@ -1,17 +1,18 @@
 from PIL import Image
 import os
 from natsort import natsorted
-
+time_size = 50
+xy_size = 3
 
 def main():
-    date = "20231224"
-    image_num = "img2"
+    date = "20240110"
+    image_num = "img0"
     # JPGファイルがあるディレクトリパス
-    input_folder = r'C:\Users\AIlab\labo\3DCNN\results\\' + date + r'\result_kernel_100_3_3\predict\train_predict_3D\\' + image_num
-
+    # input_folder = r'C:\Users\AIlab\labo\3DCNN\results\\' + date + rf'\result_kernel_{time_size}_{xy_size}_{xy_size}\predict\train_predict_3D\\' + image_num
+    input_folder = r"F:\train_data\20240108\0to1199\img0\image\img1"
     # GIFを保存するファイル名とパス
-    output_gif = r'C:\Users\AIlab\labo\3DCNN\results\\' + date + rf'\result_kernel_100_3_3\predict/output_{image_num}.gif'
-
+    # output_gif = r'C:\Users\AIlab\labo\3DCNN\results\\' + date + rf'\result_kernel_{time_size}_{xy_size}_{xy_size}\predict/output_{image_num}.gif'
+    output_gif = r"F:\train_data\20240108\0to1199\img0\img1_output.gif"
     # 画像ファイルのリストを取得
     image_list = [f for f in natsorted(os.listdir(input_folder)) if f.endswith('.jpg')]
 

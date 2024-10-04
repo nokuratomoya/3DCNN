@@ -20,31 +20,54 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 split_num = 1  # 分割サイズ　split_num*split_num分割される concatenateするときに使う
 resize = 120  # resize * resize pixel
-# pixel = int(resize / split_num)
-pixel = 120
-# date = "20230125"
+pixel = int(resize / split_num)
 date = get_now()
-data_num = 400
+
+data_num = 1200
 train_data_num = int(data_num * 0.8)
 value_data_num = data_num - train_data_num
-spike_data_num = 30
+spike_data_num = 150
 # 刺激画像が始まる位置(教師画像は+1)
-stim_head = 201
+stim_head = 200
+
 # データ拡張数
 expansion_num = 1
 
+# spike_data_name : "LNP" or "emulator" or "LNI" or "emulator_25"
+spike_data_name = "emulator"
+
 # 三次元出力用
 output_3D = False
-skip_data_num = 101
-dataset_num_3D = int((800 - spike_data_num) / skip_data_num)
+skip_data_num = 1
+dataset_num_3D = int((2000 - spike_data_num) / skip_data_num)
+# dataset_num_3D = 1400
+start_num_3D = 642
 
-dirname_main = r'F:\train_data\20240109\sustained\0to399'
+# emulator_path = r'F:\train_data\20240108\0to1199'
+emulator_path = r'H:\train_data\20240711\0to1199'
+emulator_path_25 = r'H:\train_data\20240801\0to1199_2.5ms'
+# dirname_main = r'F:\train_data\20240212\movie'
+LNP_spike = r"H:\train_data\LNPspike\spikedata_original"
+LNI_spike = r"H:\G\LNImodel\train_data\20240626\gain2_dt0.05\0to399"
+
+if spike_data_name == "LNP":
+    dirname_main = LNP_spike
+elif spike_data_name == "emulator":
+    dirname_main = emulator_path
+elif spike_data_name == "LNI":
+    dirname_main = LNI_spike
+elif spike_data_name == "emulator_25":
+    dirname_main = emulator_path_25
+
+# dirname_main = r"F:\train_data\20240109\sustained\0to399"
 
 
 def load_dataset():
     train_filename, value_filename = random_folder_select(dirname_main)
-    # train_filename = natsorted(train_filename)
-    # value_filename = natsorted(value_filename)
+    # train_filename = natsorted(os.listdir(dirname_main))
+    # value_filename = []
+    train_filename = natsorted(train_filename)
+    value_filename = natsorted(value_filename)
     print(train_filename)
     print(len(train_filename))
     print(value_filename)
@@ -69,6 +92,11 @@ def load_dataset():
     y_trains_resize_list = y_trains_resize(y_trains)
     end = time.time()
     print("resize_time:{}".format(end - start))
+    # print(f"x_trains:{len(x_trains)}*{len(x_trains[0])}*{len(x_trains[0][0])}*{len(x_trains[0][0][0])}")
+    # print(f"y_trains:{len(y_trains)}*{len(y_trains[0])}*{len(y_trains[0][0])}")
+
+    if split_num != 1:
+        x_trains_resize_list, y_trains_resize_list = data_split(x_trains_resize_list, y_trains_resize_list)
 
     if expansion_num != 1:
         # ---訓練データ(x_train)拡張---
@@ -97,18 +125,23 @@ def random_folder_select(dirname_main):
     used_filename = []
 
     all_filename = natsorted(os.listdir(dirname_main))
-    used_filename.append(all_filename[0])
+    filename = all_filename[:data_num]
+
+    used_filename.append(filename[0])
     while len(used_filename) != train_data_num:
 
-        list_temp = random.choice(all_filename)
+        list_temp = random.choice(filename)
         if list_temp in used_filename:
             continue
-        elif list_temp == all_filename[1]:
+        elif list_temp == filename[1]:
             continue
         else:
             used_filename.append(list_temp)
 
-    unused_filename = set(all_filename) ^ set(used_filename)
+    unused_filename = set(filename) ^ set(used_filename)
+    if len(unused_filename) != value_data_num:
+        print("value_data_num is not correct")
+        exit()
 
     return natsorted(used_filename), natsorted(list(unused_filename))
 
@@ -120,15 +153,34 @@ def load_data(filename):
     count = 0
     for file in filename:
         # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
-        load_spike_path = os.path.join(dirname_main, file, "img1")
-        print(load_spike_path)
+
+        # LNPspikeの場合
+        if spike_data_name == "LNP":
+            # LNPspikeの場合
+            load_spike_path = LNP_spike + "\\spike_" + file + "\\"
+            load_npy_path = list(
+                map(lambda x: load_spike_path + "\\spike_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
+            # print(load_npy_path)
+
+        elif spike_data_name == "emulator_25":
+            load_spike_path = os.path.join(emulator_path_25, file, "img1_5")
+            load_npy_path = [
+                os.path.join(load_spike_path, f"img1_{stim_head + i}_{j}.npy")
+                for i in range(int(spike_data_num / 2))
+                for j in range(2)
+            ]
+        # print(load_spike_path)
         # 読み込むファイル名例：201~400
-        load_npy_path = list(
-            map(lambda x: load_spike_path + "\\img1_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
+        # emulator,LNIの場合
+        else:
+            load_spike_path = os.path.join(dirname_main, file, "img1")
+            load_npy_path = list(
+                map(lambda x: load_spike_path + "\\img1_" + str(x + stim_head) + ".npy", np.arange(spike_data_num)))
+
         spike_data_temp = list(map(lambda x: np.load(x), load_npy_path))
         spike_data_list.append(spike_data_temp)
 
-        y_path = os.path.join(dirname_main, file, "img0")
+        y_path = os.path.join(emulator_path, file, "img0")
         load_y_path = y_path + "\\img0_" + str(stim_head + 1) + ".npy"
         teacher_data_list.append(np.load(load_y_path))
 
@@ -151,13 +203,16 @@ def load_data_3D(filename):
     count = 0
     for file in filename:
         print(file)
-        for i in range(dataset_num_3D):
+        for i in range(dataset_num_3D + start_num_3D):
+            if i < start_num_3D:
+                continue
             # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
             load_spike_path = os.path.join(dirname_main, file, "img1")
             # print(load_spike_path)
             # 読み込むファイル名例：201~400
             load_npy_path = list(
-                map(lambda x: load_spike_path + "\\img1_" + str(x + i * skip_data_num) + ".npy", np.arange(spike_data_num)))
+                map(lambda x: load_spike_path + "\\img1_" + str(x + i * skip_data_num) + ".npy",
+                    np.arange(spike_data_num)))
             spike_data_temp = list(map(lambda x: np.load(x), load_npy_path))
             spike_data_list.append(spike_data_temp)
 
@@ -311,6 +366,54 @@ def data_3D_func(x_train, y_train):
     return x_trains1, y_trains1
 
 
+def data_split(x_trains_ori, y_trains_ori):
+    x_trains_split = []
+    y_trains_split = []
+    for i in range(len(x_trains_ori)):
+        x_train = x_trains_ori[i]
+        y_train = y_trains_ori[i]
+        x_trains = []
+        y_trains = []
+
+        # ---分割プログラム---
+        y_train_temp = np.split(y_train, split_num, 1)
+        for i in range(split_num):
+            y_trains.append(np.split(y_train_temp[i], split_num))
+
+        for i in range(len(x_train)):
+            x_train_temp = np.split(x_train[i], split_num, 1)
+            for j in range(split_num):
+                x_trains.append(np.split(x_train_temp[j], split_num))
+
+        # ---平坦化---
+        x_trains = list(itertools.chain.from_iterable(x_trains))
+        y_trains = list(itertools.chain.from_iterable(y_trains))
+
+        # ---並び替え---
+        loop_num = split_num * split_num
+        x_temp2 = []
+        for i in range(loop_num):
+            x_temp = []
+            for j in range(i, len(x_trains), loop_num):
+                x_temp.append(x_trains[j])
+            x_temp2.append(x_temp)
+        x_trains = x_temp2
+        x_trains_split.append(x_trains)
+        y_trains_split.append(y_trains)
+
+    # shapeを変更 (32, split_num*split_num, 120, 120, 1) -> (32*split_num*split_num, 120, 120, 1)
+    x_trains_split = np.array(x_trains_split)
+    y_trains_split = np.array(y_trains_split)
+    x_trains_split = x_trains_split.reshape(len(x_trains_split) * split_num * split_num, spike_data_num, pixel, pixel,
+                                            1)
+    y_trains_split = y_trains_split.reshape(len(y_trains_split) * split_num * split_num, pixel, pixel, 1)
+
+    # print(f"x_trains_split:{len(x_trains_split)}*{len(x_trains_split[0])}*{len(x_trains_split[0][0])}*{len(x_trains_split[0][0][0])}*{len(x_trains_split[0][0][0][0])}")
+    # print(f"y_trains_split:{len(y_trains_split)}*{len(y_trains_split[0])}*{len(y_trains_split[0][0])}*{len(y_trains_split[0][0][0])}")
+
+    return x_trains_split, y_trains_split
+
+
 def plot_history(history, path):
     plt.figure(figsize=(12, 8))
     # plt.subplots_adjust(hspace=0.3)
@@ -362,7 +465,7 @@ def save_data_csv(save_data, save_dir_name):
 def img_show(data, save_file):
     img = Image.fromarray(data)
     # img.show()
-    img.convert('L').save(save_file + "_one" + ".jpg")
+    img.convert('L').save(save_file + ".jpg")
 
 
 def pre_csv_save(data, save_file):
@@ -381,6 +484,13 @@ def pre_concatenate(x_pre):
             col_c = np.concatenate([col_c, row_c], 1)
 
     return col_c
+
+
+def y_trains_save(y_trains, save_path):
+    y_trains = y_trains.reshape(len(y_trains), pixel, pixel)
+    y_trains *= 255
+    for i in range(len(y_trains)):
+        img_show(y_trains[i], save_path + "\\y_train\\" + str(i))
 
 #
 # def load_dataset_predict(filename):
