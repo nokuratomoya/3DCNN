@@ -21,12 +21,12 @@ def main():
     # # 結果の保存先
     # results_path = r"C:\Users\AIlab\labo\LNPmodel\results\\" + results_date + r"\predict\\"
 
-    eval_file_all = natsorted(os.listdir(eval_file_path))
-    for eval_file in eval_file_all:
-        # calc_any_NCC(model_path, results_predict_path, eval_file_path)
-        calc_any_SSIM(model_path, results_predict_path, eval_file_path)
+    # eval_file_all = natsorted(os.listdir(eval_file_path))
+    # for eval_file in eval_file_all:
+    #     # calc_any_NCC(model_path, results_predict_path, eval_file_path)
+    #     calc_any_SSIM(model_path, results_predict_path, eval_file_path)
 
-    # calc_3D_SSIM(model_path, results_predict_path, eval_file_path)
+    calc_3D_SSIM(model_path, results_predict_path, eval_file_path)
     # calc_3D_NCC(model_path, results_predict_path, eval_file_path)
 
 
