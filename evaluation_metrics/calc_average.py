@@ -12,9 +12,9 @@ def main():
 
     # results_path = r"C:\Users\AIlab\labo\LNPmodel\results\\" + results_date + rf"\predict\\"
 
-    # total_average(results_predict_path, SSIM=True, NCC=False, total=False)
+    total_average(results_predict_path, SSIM=True, NCC=False, total=False)
 
-    SSIM_all_average(results_predict_path)
+    # SSIM_all_average(results_predict_path)
     # NCCspearman_all_average(results_predict_path)
 
 

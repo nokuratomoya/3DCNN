@@ -3,18 +3,18 @@ dataset_total = 1200
 dataset_num = int(dataset_total * 0.8)
 # dataset_num = 32
 # train_data_date = "20230120"
-model_date = "20240820"
+model_date = "20240903"
 
 date = ""
 
 a = 0.043
 
 results_date = f"BMEiCON2024_diff\\a={a * 8}"
-spike_data_name = "LNI"
+spike_data_name = "emulator"
 
 # 結果の保存先
-results_predict_path = rf"E:\Users\AIlab\labo\{spike_data_name}model\results\\" + results_date + r"\predict\\"
-# results_predict_path = rf"C:\Users\AIlab\labo\3DCNN\results\20240820\result_kernel_100_3_3\predict\\"
+# results_predict_path = rf"E:\Users\AIlab\labo\{spike_data_name}model\results\\" + results_date + r"\predict\\"
+results_predict_path = rf"C:\Users\AIlab\labo\3DCNN\results\20240903\result_kernel_150_3_3\predict\\"
 
 # スパイクデータが入ったフォルダ
 if spike_data_name == "LNI":
@@ -26,12 +26,12 @@ elif spike_data_name == "emulator":
 elif spike_data_name == "emulator_25":
     eval_file_path = rf"H:\train_data\20240801\0to1199_2.5ms"
 
-time_size = 100
+time_size = 150
 # time_size = [40, 60, 80]
 xy_size = 3
 pixel_size = 120
 
-E = 1628
+E = 1156
 
 
 start_num = 400
