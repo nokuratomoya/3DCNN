@@ -3,9 +3,9 @@ dataset_num = 1200
 train_data_date = "20230120"
 
 # date = "20231116"
-time_size = [50]
+# time_size = [50]
 # time_size = [40, 60, 80]
-xy_size = [3]
+# xy_size = [3]
 
 # EPOCHS
 # E = (

@@ -14,8 +14,7 @@ from natsort import natsorted
 import multiprocessing
 import time
 
-from global_value import get_now, pixel_size, split_num, time_size, dataset_num, spike_data_name, predict_file_path, \
-    stim_head
+from global_value import get_now, pixel_size, split_num, time_size, dataset_num, spike_data_name
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -30,6 +29,8 @@ value_data_num = 400 - train_data_num
 spike_data_num = time_size
 
 dirname_main = r'H:\train_data\20240711\0to1199'
+
+predict_file_path = ""
 
 
 # LNP_spike = r"F:\train_data\LNPspike\spikedata_original"
@@ -89,7 +90,8 @@ def load_data(filename):
     # emulatorの場合
     elif spike_data_name == "emulator":
         # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
-        load_spike_path = os.path.join(dirname_main, filename, "img1")
+        emulator_spike_path = predict_file_path
+        load_spike_path = os.path.join(emulator_spike_path, filename, "img1")
         # print(load_spike_path)
         # 読み込むファイル名例：201~400
         load_npy_path = list(
@@ -124,7 +126,10 @@ def load_data(filename):
     return spike_data_list, teacher_data_list
 
 
-def load_dataset_predict_3D(filename, pre_start_num, pre_end_num):
+def load_dataset_predict_3D(filename, pre_start_num, pre_end_num, predict_file_path_t):
+    global predict_file_path
+    predict_file_path = predict_file_path_t
+    print("predict_file_path:{}".format(predict_file_path))
     # ---訓練データ(x_train)読み込み---
     # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
     # x_trains, y_trains = load_data_3D(filename, i)
@@ -159,6 +164,7 @@ def load_dataset_predict_3D(filename, pre_start_num, pre_end_num):
 
 
 def load_data_3D(filename, i):
+    # print("1111predict_file_path:", predict_file_path)
     # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
     spike_data_list = []
 
@@ -174,7 +180,8 @@ def load_data_3D(filename, i):
     # emulatorの場合
     elif spike_data_name == "emulator":
         # 読み込むファイルpath例：F:\train_data\20231128\stim400_cycle800ms\img0\img0
-        load_spike_path = os.path.join(dirname_main, filename, "img1")
+        emulator_spike_path = predict_file_path
+        load_spike_path = os.path.join(emulator_spike_path, filename, "img1")
         # print(load_spike_path)
         # 読み込むファイル名例：201~400
         load_npy_path = list(
@@ -188,10 +195,11 @@ def load_data_3D(filename, i):
 
     elif spike_data_name == "emulator_25":
         load_spike_path = os.path.join(predict_file_path, filename, "img1_5")
+
         load_npy_path = [
-            os.path.join(load_spike_path, f"img1_{stim_head + i}_{j}.npy")
-            for i in range(int(spike_data_num / 2))
-            for j in range(2)
+            os.path.join(load_spike_path, f"img1_{x + i}_{y}.npy")
+            for x in range(int(spike_data_num / 2))
+            for y in range(2)
         ]
 
     spike_data_temp = list(map(lambda x: np.load(x), load_npy_path))

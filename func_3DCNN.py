@@ -26,8 +26,8 @@ date = get_now()
 data_num = 1200
 train_data_num = int(data_num * 0.8)
 value_data_num = data_num - train_data_num
-spike_data_num = 150
-# 刺激画像が始まる位置(教師画像は+1)
+spike_data_num = 50
+# 刺激画像が始まる位置(教師画像は+1), emulator_25の場合でも200に設定
 stim_head = 200
 
 # データ拡張数

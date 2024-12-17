@@ -44,6 +44,14 @@ def model_build(kernel_time, kernel_xy, filter_size, input_shape):
         pool_size1 = [8, 1, 1]
         pool_size2 = [5, 1, 1]
         pool_size3 = [5, 1, 1]
+    elif kernel_time == 250:
+        pool_size1 = [10, 1, 1]
+        pool_size2 = [5, 1, 1]
+        pool_size3 = [5, 1, 1]
+    elif kernel_time == 300:
+        pool_size1 = [12, 1, 1]
+        pool_size2 = [5, 1, 1]
+        pool_size3 = [5, 1, 1]
     else:
         pool_size1 = [1, 1, 1]
         pool_size2 = [1, 1, 1]

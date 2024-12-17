@@ -19,40 +19,49 @@ pre_end_num = 600
 
 # 刺激画像が始まる位置(教師画像は+1)
 # stim_head  =201
-stim_head = 214
+# stim_head = 214
 
 # SID, 3D
 model_dim = "3D"
 # LNP, emulator, emulator_25
-spike_data_name = "LNI"
+spike_data_name = "emulator"
 
 # load_spike_date = "20240712"
 # スパイクデータの保存先
 # emulator
 # predict_file_path =r"H:\train_data\20240711\0to1199"
 # predict_file_path =r"H:\train_data\20240801\0to1199_2.5ms"
-per = 8
+per = 1
 a = 0.043 * per
 
 gain_total = [1, 0.75, 0.5]
 par_total = [1, 2, 4, 8]
+gain_one = gain_total[0]
+par_one = par_total[0]
+
+nonlinear_gain = 24
 
 # LNI
-predict_file_path = rf"E:\LNImodel\train_data\20241008\gain0.5_par1\gain2.5_dt2.5\0to99"
-# predict_file_path = rf"H:\G\LNImodel\train_data\20240911_diff\a={a}\gain2.5_dt2.5\0to99"
+# predict_file_path = rf"E:\LNImodel\train_data\20241024\std_change\gain{gain_one}_par{par_one}\gain{nonlinear_gain}_dt2.5\0to99"
+# predict_file_path = rf"E:\LNImodel\train_data\20241030\intensity_bias60_nodiff\gain24_dt2.5\0to99"
 # LNP
 # predict_file_path = r"H:\G\LNPmodel\train_data\20240824\poisson_dt2e-05_dt2.5\0to99"
+# emulator
+predict_file_path = r"H:\train_data\20240801\0to1199_2.5ms"
 
 # 結果の保存先
 # save_date = f"input_time_size_5ms\\150"
-save_date = "20241008//"
+save_date = f"20240820//"
 
 # emulator
-# save_path = r"C:\Users\AIlab\labo\3DCNN\results\\" + save_date + fr"\result_kernel_{time_size}_{xy_size}_{xy_size}\predict\\"
+save_path = r"C:\Users\AIlab\labo\3DCNN\results\\" + save_date + fr"\result_kernel_{time_size}_{xy_size}_{xy_size}\predict\\"
 
 # LNI
-save_path = fr"C:\Users\AIlab\labo\{spike_data_name}model\results\\" + save_date + r"\predict\\"
+# save_path = fr"C:\Users\AIlab\labo\{spike_data_name}model\results\\" + save_date + r"\predict\\"
 
+# onishi
+# save_path = r"C:\Users\AIlab\labo\onishi\results_resize\default\predict\\"
+# save_path = ""
 # EPOCHS
 # E = (
 # [time1, time2, time3], xy1

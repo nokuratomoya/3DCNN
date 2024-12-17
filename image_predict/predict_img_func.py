@@ -14,6 +14,8 @@ import time
 
 global predict_time_total
 
+predict_file_path = ""
+
 
 def predict_calc_save(pre_file, EPOCHS, model, save_path):
     global predict_time_total
@@ -57,9 +59,11 @@ def predict_calc_save(pre_file, EPOCHS, model, save_path):
 
 
 def predict_3D_calc_save(pre_file, EPOCHS, model, save_path):
+    print(save_path)
+
     global predict_time_total
     # pre_file = '221017_data'
-    x_pres = load_dataset_predict_3D(pre_file, pre_start_num, pre_end_num)
+    x_pres = load_dataset_predict_3D(pre_file, pre_start_num, pre_end_num, predict_file_path)
     x_pres = np.array(x_pres)
     # print(x_pres.shape)
 
@@ -136,8 +140,13 @@ def predict_image(model_name, EPOCHS):
     print(f"predict_time_average:{predict_time_total / (len(unused_filename) + len(used_filename))}s")
 
 
-def predict_any_image(model_path, EPOCHS, pre_file_name, save_path):
+def predict_any_image(model_path, EPOCHS, pre_file_name, save_path, predict_file_path_t):
     global predict_time_total
+    global predict_file_path
+
+    print("save_path", save_path)
+
+    predict_file_path = predict_file_path_t
     predict_time_total = 0
     # 学習済みmodelのロード
     result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + model_path + '\\'  # k_20

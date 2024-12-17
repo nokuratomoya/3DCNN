@@ -18,6 +18,17 @@ def main():
     # NCCspearman_all_average(results_predict_path)
 
 
+    ##########
+    # # loop
+    # spatial_filter_gain_loop = [1, 0.75, 0.5]
+    # temporal_filter_par_loop = [1, 2, 4, 8]
+    # loop_list = list(itertools.product(spatial_filter_gain_loop, temporal_filter_par_loop))
+    # for gain, par in loop_list:
+    #     results_predict_path = rf"C:\Users\AIlab\labo\LNImodel\results\\20241017\maxGP1\gain{gain}_par{par}\\predict\\"
+    #     SSIM_all_average(results_predict_path)
+        # NCCspearman_all_average
+
+
 def MI_NCC_SSIM_average():
     results_path = r"C:\Users\AIlab\labo\3DCNN\results\\" + results_date + rf"\result_kernel_{time_size[0]}_{xy_size[0]}_{xy_size[0]}\predict\\"
 

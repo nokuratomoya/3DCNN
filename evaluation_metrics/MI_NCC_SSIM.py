@@ -5,6 +5,7 @@ from NCC_func import calc_any_NCC, calc_3D_NCC
 from global_value import model_date, results_date, time_size, xy_size, results_predict_path, eval_file_path
 import os
 from natsort import natsorted
+import itertools
 
 
 def main():
@@ -28,6 +29,19 @@ def main():
 
     calc_3D_SSIM(model_path, results_predict_path, eval_file_path)
     # calc_3D_NCC(model_path, results_predict_path, eval_file_path)
+
+
+    ##########
+    # loop
+    # spatial_filter_gain_loop = [1, 0.75, 0.5]
+    # temporal_filter_par_loop = [1, 2, 4, 8]
+    # loop_list = list(itertools.product(spatial_filter_gain_loop, temporal_filter_par_loop))
+    #
+    # model_path = model_date + "\\" + f"result_kernel_{time_size}_{xy_size}_{xy_size}"
+    # for gain, par in loop_list:
+    #     results_predict_path = rf"C:\Users\AIlab\labo\LNImodel\results\\20241017\maxGP1\gain{gain}_par{par}\\predict\\"
+    #     eval_file_path = rf"E:\LNImodel\train_data\20241017\maxGP1\gain{gain}_par{par}\gain10_dt2.5\0to99"
+    #     calc_3D_SSIM(model_path, results_predict_path, eval_file_path)
 
 
 if __name__ == "__main__":

@@ -42,6 +42,7 @@ def main():
 
     result_dirpath = r"C:\Users\AIlab\labo\3DCNN\results\\" + date
     os.makedirs(result_dirpath, exist_ok=True)
+    os.makedirs(result_dirpath + f'\\result_kernel_{time_size}_{xy_size}_{xy_size}\\', exist_ok=True)
 
     # y_trains_save(y_trains, result_dirpath)
     # 複数
