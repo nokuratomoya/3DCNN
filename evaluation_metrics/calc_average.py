@@ -2,31 +2,53 @@ import os
 import numpy as np
 import pandas as pd
 from global_value import results_date, time_size, xy_size, dataset_num, E, BATCH_SIZE, results_predict_path, start_num, \
-    end_num
+    end_num, output3D
 import itertools
 from natsort import natsorted
 
 
 def main():
+
+
     # MI_NCC_SSIM_average()
 
     # results_path = r"C:\Users\AIlab\labo\LNPmodel\results\\" + results_date + rf"\predict\\"
+    #
+    # if output3D:
+    #     SSIM_all_average(results_predict_path)
+    #     # NCCspearman_all_average(results_predict_path)
+    #
+    # elif not output3D:
+    #     total_average(results_predict_path, SSIM=True, NCC=True, total=False)
+    #
 
-    # total_average(results_predict_path, SSIM=True, NCC=False, total=False)
-
-    SSIM_all_average(results_predict_path)
-    # NCCspearman_all_average(results_predict_path)
 
 
     ##########
-    # # loop
-    # spatial_filter_gain_loop = [1, 0.75, 0.5]
-    # temporal_filter_par_loop = [1, 2, 4, 8]
-    # loop_list = list(itertools.product(spatial_filter_gain_loop, temporal_filter_par_loop))
-    # for gain, par in loop_list:
-    #     results_predict_path = rf"C:\Users\AIlab\labo\LNImodel\results\\20241017\maxGP1\gain{gain}_par{par}\\predict\\"
+    # loop
+    spatial_filter_gain_loop = [1, 0.75, 0.5]
+    temporal_filter_par_loop = [1, 2, 4, 8]
+    loop_list = list(itertools.product(spatial_filter_gain_loop, temporal_filter_par_loop))
+    filter_std_list = [3.8, 1.9, 7.6]
+    a_list = [0.005375, 0.01075, 0.0215, 0.043, 0.086, 0.172, 0.344]
+    gain = spatial_filter_gain_loop[0]
+    par = temporal_filter_par_loop[0]
+
+    for a in a_list:
+        results_predict_path = rf"C:\Users\AIlab\labo\LNImodel\results\20241217\\a_compare\\a={a}\\predict\\"
+        SSIM_all_average(results_predict_path)
+        # NCCspearman_all_average(results_predict_path)
+        # MSE_or_PSNR_or_CW_SSIM_all_average(results_predict_path, index="MSE")  # index = [MSE, PSNR, CW_SSIM, NMI]
+
+    # for filter_std in filter_std_list:
+    #     results_predict_path = rf"C:\Users\AIlab\labo\LNImodel\results\20250117//filter_std_compare//gain{gain}_par{par}_std{filter_std}\\predict\\"
     #     SSIM_all_average(results_predict_path)
-        # NCCspearman_all_average
+    #     # NCCspearman_all_average
+
+    # for gain, par in loop_list:
+    #     results_predict_path = rf"C:\Users\AIlab\labo\LNImodel\results\20241129\spatiotemporal_compare\gain{gain}_par{par}\\predict\\"
+    #     SSIM_all_average(results_predict_path)
+    #     # NCCspearman_all_average
 
 
 def MI_NCC_SSIM_average():
@@ -110,6 +132,9 @@ def total_average(results_path, SSIM=False, NCC=False, total=False):
 
 def SSIM_all_average(results_path):
     SSIM_path = results_path + f"\\SSIM_3D\\"
+    if time_size != 100:
+        SSIM_path = results_path + f"\\SSIM_3D_{time_size}\\"
+
     filename_all = natsorted(os.listdir(SSIM_path))
 
     col_names = ['c{0:02d}'.format(i) for i in range(end_num - start_num + 1)]
@@ -120,6 +145,8 @@ def SSIM_all_average(results_path):
         df_SSIM_all = pd.concat([df_SSIM_all, df_SSIM_one], ignore_index=True)
 
     save_ave_csv_path = results_path + f"SSIM_total"
+    if time_size != 100:
+        save_ave_csv_path = results_path + f"SSIM_total_{time_size}"
     os.makedirs(save_ave_csv_path, exist_ok=True)
     df_ave = df_SSIM_all.mean(axis=0)
     df_std = df_SSIM_all.std(axis=0)
@@ -157,6 +184,33 @@ def NCCspearman_all_average(results_path):
     np.savetxt(save_ave_csv_path + "\\NCCspearman_3D_average.csv", df_ave_np.transpose(), delimiter=",")
     np.savetxt(save_ave_csv_path + "\\NCCspearman_3D_std.csv", df_std_np.transpose(), delimiter=",")
     np.savetxt(save_ave_csv_path + "\\NCCspearman_3D_sem.csv", df_sem_np.transpose(), delimiter=",")
+
+
+
+def MSE_or_PSNR_or_CW_SSIM_all_average(results_path, index="MSE"):
+    NCC_path = results_path + f"\\{index}_3D\\"
+    filename_all = natsorted(os.listdir(NCC_path))
+
+    col_names = ['c{0:02d}'.format(i) for i in range(end_num - start_num + 1)]
+    df_NCC_all = pd.DataFrame(columns=col_names)
+    for filename in filename_all:
+        NCC_one_path = NCC_path + filename
+        df_NCC_one = read_csv_df_total(NCC_one_path, col_names)
+        df_NCC_all = pd.concat([df_NCC_all, df_NCC_one], ignore_index=True)
+
+    save_ave_csv_path = results_path + f"{index}_total"
+    os.makedirs(save_ave_csv_path, exist_ok=True)
+    df_ave = df_NCC_all.mean(axis=0)
+    df_std = df_NCC_all.std(axis=0)
+    df_sem = df_NCC_all.sem(axis=0)
+
+    df_ave_np = np.array(df_ave)
+    df_std_np = np.array(df_std)
+    df_sem_np = np.array(df_sem)
+    np.savetxt(save_ave_csv_path + f"\\{index}_3D_average.csv", df_ave_np.transpose(), delimiter=",")
+    np.savetxt(save_ave_csv_path + f"\\{index}_std.csv", df_std_np.transpose(), delimiter=",")
+    np.savetxt(save_ave_csv_path + f"\\{index}_3D_sem.csv", df_sem_np.transpose(), delimiter=",")
+
 
 def read_csv_df_MI(path):
     df = pd.read_csv(path, encoding="shift_jis", index_col=0, skiprows=0)

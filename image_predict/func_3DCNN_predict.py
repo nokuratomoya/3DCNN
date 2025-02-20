@@ -14,7 +14,7 @@ from natsort import natsorted
 import multiprocessing
 import time
 
-from global_value import get_now, pixel_size, split_num, time_size, dataset_num, spike_data_name
+from global_value import get_now, pixel_size, split_num, time_size, dataset_num, spike_data_name, stim_head
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -39,7 +39,9 @@ predict_file_path = ""
 # LNI_spike_path = r"G:\LNImodel\train_data\20240619\gain2_dt0.05\0to99"
 
 
-def load_dataset_predict(filename):
+def load_dataset_predict(filename, predict_file_path_t):
+    global predict_file_path
+    predict_file_path = predict_file_path_t
     # ---訓練データ(x_train)読み込み---
     # x_trains: [train_data_num, spike_data_num, 128, 128], y_trains: [train_data_num, 128, 128]
     x_trains, y_trains = load_data(filename)

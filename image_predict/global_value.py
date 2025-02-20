@@ -5,11 +5,27 @@ dataset_num = int(dataset_total * 0.8)
 
 # train_data_date = "20230120"
 
-model_date = "20240820"
-time_size = 100
+##### 変更　#####
+model_date = "timesize_2.5ms"
+time_size = 150
 xy_size = 3
 pixel_size = 120
 split_num = 1  # 分割サイズ　split_num*split_num分割される
+
+# E_list = [1171, 1275, 1359, 1675, 1505]
+
+# timesize_2.5ms = [10, 20, 30, 50, 100, 150]
+E_list = [799, 1100, 1172, 1133]
+# E = E_list[3]
+E = 1801
+
+# 学習に用いたCNN構造
+# SID, 3D
+model_dim = "3D"
+
+# 復元させるスパイク画像の種類
+# LNP, LNI, emulator, emulator_25
+spike_data_name = "LNI"
 
 # 一枚の画像に対し複数枚の出力をするときの変数
 output3D = True  # 3D出力するかどうか
@@ -17,14 +33,10 @@ output3D = True  # 3D出力するかどうか
 pre_start_num = 400
 pre_end_num = 600
 
+# output=Falseの場合
 # 刺激画像が始まる位置(教師画像は+1)
-# stim_head  =201
+stim_head = 200
 # stim_head = 214
-
-# SID, 3D
-model_dim = "3D"
-# LNP, emulator, emulator_25
-spike_data_name = "emulator"
 
 # load_spike_date = "20240712"
 # スパイクデータの保存先
@@ -42,36 +54,38 @@ par_one = par_total[0]
 nonlinear_gain = 24
 
 # LNI
-# predict_file_path = rf"E:\LNImodel\train_data\20241024\std_change\gain{gain_one}_par{par_one}\gain{nonlinear_gain}_dt2.5\0to99"
-# predict_file_path = rf"E:\LNImodel\train_data\20241030\intensity_bias60_nodiff\gain24_dt2.5\0to99"
+if spike_data_name == "LNI":
+    predict_file_path = rf"E:\LNImodel\train_data\20241129\spatiotemporal_compare\gain{gain_one}_par{par_one}\gain{nonlinear_gain}_dt2.5\0to99"
+    # predict_file_path = rf"E:\LNImodel\train_data\20241030\intensity_bias60_nodiff\gain24_dt2.5\0to99"
+
 # LNP
-# predict_file_path = r"H:\G\LNPmodel\train_data\20240824\poisson_dt2e-05_dt2.5\0to99"
+elif spike_data_name == "LNP":
+    predict_file_path = r"H:\G\LNPmodel\train_data\20240824\poisson_dt2e-05_dt2.5\0to99"
+
 # emulator
-predict_file_path = r"H:\train_data\20240801\0to1199_2.5ms"
+elif spike_data_name == "emulator":
+    predict_file_path = r"H:\train_data\20240711\0to1199"
+# emulator_25
+elif spike_data_name == "emulator_25":
+    predict_file_path = r"H:\train_data\20240801\0to1199_2.5ms"
+
+else:
+    predict_file_path = ""
 
 # 結果の保存先
 # save_date = f"input_time_size_5ms\\150"
-save_date = f"20240820//"
+
 
 # emulator
-save_path = r"C:\Users\AIlab\labo\3DCNN\results\\" + save_date + fr"\result_kernel_{time_size}_{xy_size}_{xy_size}\predict\\"
+if spike_data_name == "emulator" or "emulator_25":
+    save_date = model_date
+    save_path = r"C:\Users\AIlab\labo\3DCNN\results\\" + save_date + fr"\result_kernel_{time_size}_{xy_size}_{xy_size}_datanum{dataset_total}\predict\\"
 
 # LNI
-# save_path = fr"C:\Users\AIlab\labo\{spike_data_name}model\results\\" + save_date + r"\predict\\"
+elif spike_data_name == "LNI" or "LNP":
+    save_date = f"20241217//a_compare//gain{gain_one}_par{par_one}"
+    save_path = fr"C:\Users\AIlab\labo\{spike_data_name}model\results\\" + save_date + r"\predict\\"
 
-# onishi
-# save_path = r"C:\Users\AIlab\labo\onishi\results_resize\default\predict\\"
-# save_path = ""
-# EPOCHS
-# E = (
-# [time1, time2, time3], xy1
-# [time1, time2, time3], xy2
-# [time1, time2, time3] xy3
-# )
-# E = ([1057, 1070, 930], [864, 1044, 905], [728, 1059, 755])  # 20230704
-# E = ([1499, 1048, 1567], [1075, 840, 613], [1000, 925, 904])  # 20230707
-# E = ([623, 853, 676], [1259, 845, 1160], [922, 835, 115])  # 20230712
-E = 1628
 
 import datetime
 

@@ -1,5 +1,3 @@
-from predict_img_func import predict_image, predict_any_image
-from global_value import time_size, xy_size, E, model_date, get_now, gain_total, par_total, predict_file_path
 import os
 from natsort import natsorted
 import csv
@@ -7,7 +5,6 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import itertools
 import tensorflow as tf
-from func_3DCNN_predict import img_show, pre_npy_save
 from PIL import Image
 
 
@@ -80,19 +77,19 @@ def main():
 
     os.makedirs(save_path, exist_ok=True)
     # model_dateの保存
-    save_data_csv(["model_date",
-                   "time_size",
-                   "xy_size",
-                   "EPOCHS",
-                   "predict_file_path",
-                   ], save_path + "trained_model.csv")
-
-    save_data_csv([model_date,
-                   time_size,
-                   xy_size,
-                   E,
-                   predict_file_path,
-                   ], save_path + "trained_model.csv")
+    # save_data_csv(["model_date",
+    #                "time_size",
+    #                "xy_size",
+    #                "EPOCHS",
+    #                "predict_file_path",
+    #                ], save_path + "trained_model.csv")
+    #
+    # save_data_csv([model_date,
+    #                time_size,
+    #                xy_size,
+    #                E,
+    #                predict_file_path,
+    #                ], save_path + "trained_model.csv")
 
     model_path = model_date + "\\" + f"result_kernel_{time_size}_{xy_size}_{xy_size}"
 
@@ -248,6 +245,16 @@ def padding_img(img):
     img_pad = np.zeros((t, img_size, img_size))
     img_pad[:, start:end, start:end] = img
     return img_pad
+
+
+def pre_npy_save(data, save_file):
+    np.save(save_file, data)
+
+
+def img_show(data, save_file):
+    img = Image.fromarray(data)
+    # img.show()
+    img.convert('L').save(save_file + ".jpg")
 
 
 if __name__ == "__main__":

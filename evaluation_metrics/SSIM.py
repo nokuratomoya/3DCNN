@@ -80,12 +80,13 @@ def calc_any_SSIM(model_path, results_path, eval_file_path):
 
         if eval_file_name in used_filename:
             ori_img, pre_img = image_open(eval_file_name, results_path, "train")
-            train_SSIM.append(ssim(ori_img, pre_img))
-            total_SSIM.append(ssim(ori_img, pre_img))
+            train_SSIM.append(ssim(ori_img, pre_img, data_range=pre_img.max() - pre_img.min()))
+            total_SSIM.append(ssim(ori_img, pre_img, data_range=pre_img.max() - pre_img.min()))
         elif eval_file_name in unused_filename:
             ori_img, pre_img = image_open(eval_file_name, results_path, "test")
-            test_SSIM.append(ssim(ori_img, pre_img))
-            total_SSIM.append(ssim(ori_img, pre_img))
+            test_SSIM.append(ssim(ori_img, pre_img, data_range=pre_img.max() - pre_img.min()))
+            total_SSIM.append(ssim(ori_img, pre_img, data_range=pre_img.max() - pre_img.min()))
+
 
     # SSIM保存
     SSIM_save_path = results_path + "SSIM"
@@ -130,14 +131,16 @@ def calc_3D_SSIM(model_path, results_path, eval_file_path):
 
             ori_img, pre_images = image_open_all(eval_file_name, results_path, "train", start_num, end_num)
             for pre_img in pre_images:
-                SSIM_one.append(ssim(ori_img, pre_img))
+                SSIM_one.append(ssim(ori_img, pre_img, data_range=pre_img.max() - pre_img.min()))
 
         elif eval_file_name in unused_filename:
             ori_img, pre_images = image_open_all(eval_file_name, results_path, "test", start_num, end_num)
             for pre_img in pre_images:
-                SSIM_one.append(ssim(ori_img, pre_img))
+                SSIM_one.append(ssim(ori_img, pre_img, data_range=pre_img.max() - pre_img.min()))
 
-        SSIM_one_save_path = results_path + "SSIM_3D\\"
+        SSIM_one_save_path = results_path + f"SSIM_3D\\"
+        if time_size != 100:
+            SSIM_one_save_path = results_path + f"SSIM_3D_{time_size}\\"
         os.makedirs(SSIM_one_save_path, exist_ok=True)
 
         # csvに保存
@@ -164,10 +167,10 @@ def read_file(folder_path):
 
 
 def image_open(filename, predict_path, t_v):
-    original_dir = predict_path + f"{t_v}_predict" + "\\pre_" + filename + f"_dataset={dataset_num}_e={E}_b={BATCH_SIZE}.jpg"
-    predict_dir = rf"H:\train_data\20240711\0to1199_resized\\" + filename + ".jpg"
-    ori_img = Image.open(predict_dir)
-    pre_img = Image.open(original_dir)
+    original_dir = rf"H:\train_data\20240711\0to1199_resized\\" + filename + ".jpg"
+    predict_dir = predict_path + f"{t_v}_predict" + "\\pre_" + filename + f"_dataset={dataset_num}_e={E}_b={BATCH_SIZE}.jpg"
+    ori_img = Image.open(original_dir)
+    pre_img = Image.open(predict_dir)
     ori_img = np.array(ori_img)
     pre_img = np.array(pre_img)
 
@@ -180,6 +183,8 @@ def image_open_all(filename, predict_path, t_v, start_num, end_num):
     ori_img = Image.open(original_dir)
     for i in range(end_num - start_num + 1):
         preduct_dir = predict_path + f"{t_v}_predict_3D" + f"\\{filename}\\pre3D_" + filename + f"_dataset={dataset_num}_e={E}_b={BATCH_SIZE}_{i + start_num}.jpg"
+        if time_size != 100:
+            preduct_dir = predict_path + f"{t_v}_predict_3D_{time_size}" + f"\\{filename}\\pre3D_" + filename + f"_dataset={dataset_num}_e={E}_b={BATCH_SIZE}_{i + start_num}.jpg"
         pre_img_temp = Image.open(preduct_dir)
         pre_img_temp = np.array(pre_img_temp)
         pre_images.append(pre_img_temp)

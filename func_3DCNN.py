@@ -26,7 +26,7 @@ date = get_now()
 data_num = 1200
 train_data_num = int(data_num * 0.8)
 value_data_num = data_num - train_data_num
-spike_data_num = 50
+spike_data_num = 100
 # 刺激画像が始まる位置(教師画像は+1), emulator_25の場合でも200に設定
 stim_head = 200
 
@@ -34,7 +34,7 @@ stim_head = 200
 expansion_num = 1
 
 # spike_data_name : "LNP" or "emulator" or "LNI" or "emulator_25"
-spike_data_name = "emulator"
+spike_data_name = "emulator_25"
 
 # 三次元出力用
 output_3D = False
@@ -62,7 +62,14 @@ elif spike_data_name == "emulator_25":
 # dirname_main = r"F:\train_data\20240109\sustained\0to399"
 
 
-def load_dataset():
+def load_dataset(d, spike):
+    global data_num, train_data_num, value_data_num, spike_data_num
+    data_num = d
+    spike_data_num = spike
+    print(f"spike_data_num:{spike_data_num}")
+    train_data_num = int(data_num * 0.8)
+    value_data_num = data_num - train_data_num
+
     train_filename, value_filename = random_folder_select(dirname_main)
     # train_filename = natsorted(os.listdir(dirname_main))
     # value_filename = []
@@ -95,8 +102,8 @@ def load_dataset():
     # print(f"x_trains:{len(x_trains)}*{len(x_trains[0])}*{len(x_trains[0][0])}*{len(x_trains[0][0][0])}")
     # print(f"y_trains:{len(y_trains)}*{len(y_trains[0])}*{len(y_trains[0][0])}")
 
-    if split_num != 1:
-        x_trains_resize_list, y_trains_resize_list = data_split(x_trains_resize_list, y_trains_resize_list)
+    # if split_num != 1:
+    #     x_trains_resize_list, y_trains_resize_list = data_split(x_trains_resize_list, y_trains_resize_list)
 
     if expansion_num != 1:
         # ---訓練データ(x_train)拡張---
@@ -123,6 +130,7 @@ def random_folder_select(dirname_main):
     # img0 -> trainに使用するファイル
     # img1 -> valueに使用するファイル
     used_filename = []
+    print("debug datanum={}".format(data_num))
 
     all_filename = natsorted(os.listdir(dirname_main))
     filename = all_filename[:data_num]

@@ -7,7 +7,7 @@ import numpy as np
 import os
 import pickle
 from global_value import BATCH_SIZE, dataset_num, model_date, pixel_size, split_num, model_dim, pre_start_num, \
-    pre_end_num, output3D
+    pre_end_num, output3D, time_size
 from natsort import natsorted
 import tensorflow as tf
 import time
@@ -20,7 +20,7 @@ predict_file_path = ""
 def predict_calc_save(pre_file, EPOCHS, model, save_path):
     global predict_time_total
     # pre_file = '221017_data'
-    x_pre = load_dataset_predict(pre_file)
+    x_pre = load_dataset_predict(pre_file, predict_file_path)
     x_pre = np.array(x_pre)
     print("2D x_pre.shape:", x_pre.shape)
     # print(x_pre.shape)
@@ -168,22 +168,29 @@ def predict_any_image(model_path, EPOCHS, pre_file_name, save_path, predict_file
     # 画像の予測、保存
     if pre_file_name in unused_filename:
         if output3D:
-            save_path = save_path + "test_predict_3D\\"
+            save_path = save_path + f"test_predict_3D_{time_size}\\"
             predict_3D_calc_save(pre_file_name, EPOCHS, model, save_path)
         else:
-            save_path = save_path + "test_predict\\"  # 保存先
+            save_path = save_path + f"test_predict_{time_size}\\"  # 保存先
             predict_calc_save(pre_file_name, EPOCHS, model, save_path)
 
     elif pre_file_name in used_filename:
         if output3D:
-            save_path = save_path + "train_predict_3D\\"
+            save_path = save_path + f"train_predict_3D_{time_size}\\"
             predict_3D_calc_save(pre_file_name, EPOCHS, model, save_path)
         else:
-            save_path = save_path + "train_predict\\"  # 保存先
+            save_path = save_path + f"train_predict_{time_size}\\"  # 保存先
             predict_calc_save(pre_file_name, EPOCHS, model, save_path)
 
+    # テストとして復元
     else:
-        print("ファイル名が存在しません")
+        # print("ファイル名が存在しません")
+        if output3D:
+            save_path = save_path + f"test_predict_3D_{time_size}\\"
+            predict_3D_calc_save(pre_file_name, EPOCHS, model, save_path)
+        else:
+            save_path = save_path + f"test_predict_{time_size}\\"  # 保存先
+            predict_calc_save(pre_file_name, EPOCHS, model, save_path)
 
 
 def ssim_loss(y_true, y_pred):
